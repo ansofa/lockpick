@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Lockpick Simulator — Real-time deadbolt timing system" />
+  <title>{{ unit_name }} — Lockpick Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Background decorations -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-glow-bottom" aria-hidden="true"></div>
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="unit-badge">
+      <span class="unit-icon" aria-hidden="true">🔒</span>
+      <span class="unit-name">{{ unit_name }}</span>
+      <span class="version-chip">v{{ version }}</span>
+    </div>
+    <nav aria-label="Navigasi utama">
+      <a href="/history" class="nav-link" id="nav-history">
+        <span aria-hidden="true">📊</span> History
+      </a>
+    </nav>
+  </header>
+
+  <!-- Main content -->
+  <main class="main" id="main-content" role="main">
+
+    <!-- ═══════════════════════════════════════
+         STATE: IDLE — Input nama pemain
+    ════════════════════════════════════════ -->
+    <section id="state-idle" class="state-panel active" aria-label="Halaman mulai">
+      <div class="card" role="region">
+
+        <h1 class="main-title">
+          LOCK<span class="accent">PICK</span><br>
+          <span class="main-title-sub">SIMULATOR</span>
+        </h1>
+        <p class="subtitle">Masukkan nama pemain untuk memulai</p>
+
+        <div class="door-pill" id="idle-door-pill" role="status" aria-live="polite">
+          <span class="door-dot locked" id="idle-door-dot"></span>
+          <span id="idle-door-text">Mengecek sensor…</span>
+        </div>
+
+        <form id="start-form" class="form" novalidate>
+          <div class="field-wrap">
+            <input
+              type="text"
+              id="player-name-input"
+              name="player_name"
+              class="field-input"
+              placeholder=" "
+              maxlength="30"
+              autocomplete="off"
+              required
+              aria-required="true"
+              aria-label="Nama pemain"
+            />
+            <label class="field-label" for="player-name-input">NAMA PEMAIN</label>
+            <div class="field-bar"></div>
+          </div>
+
+          <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
+
+          <button type="submit" class="btn btn-start" id="btn-start">
+            <span class="btn-icon" aria-hidden="true">▶</span>
+            START MISSION
+          </button>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         STATE: RUNNING — Timer berjalan
+    ════════════════════════════════════════ -->
+    <section id="state-running" class="state-panel" aria-label="Sesi berjalan">
+      <div class="card card-running" role="region">
+
+        <div class="player-chip" id="running-player-name">
+          <span aria-hidden="true">👤</span> —
+        </div>
+
+        <div class="timer-wrap" role="timer" aria-label="Waktu berlalu">
+          <div class="timer" id="timer-display">00:00.000</div>
+          <div class="timer-label">ELAPSED TIME</div>
+        </div>
+
+        <div class="door-pill large" id="running-door-pill" role="status">
+          <span class="door-dot locked pulse" id="running-door-dot"></span>
+          <span id="running-door-text">DEADBOLT AKTIF</span>
+        </div>
+
+        <p class="mission-hint">Buka kunci untuk menghentikan timer secara otomatis</p>
+
+        <button class="btn btn-reset" id="btn-reset-running" onclick="resetSession()">
+          <span aria-hidden="true">↺</span> RESET
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         STATE: STOPPED — Hasil sesi
+    ════════════════════════════════════════ -->
+    <section id="state-stopped" class="state-panel" aria-label="Sesi selesai">
+      <div class="card card-success" role="region">
+
+        <div class="success-trophy" aria-hidden="true">🏆</div>
+        <h2 class="success-title">MISSION COMPLETE!</h2>
+
+        <div class="player-chip" id="stopped-player-name">
+          <span aria-hidden="true">👤</span> —
+        </div>
+
+        <div class="result-time" id="result-time-display" role="status">00:00.000</div>
+        <div class="result-label">WAKTU FINAL</div>
+
+        <div class="result-actions">
+          <button class="btn btn-start" id="btn-play-again" onclick="resetSession()">
+            <span aria-hidden="true">▶</span> MAIN LAGI
+          </button>
+          <a href="/history" class="btn btn-outline" id="btn-leaderboard">
+            <span aria-hidden="true">📊</span> LEADERBOARD
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+          crossorigin="anonymous">

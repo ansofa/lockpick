@@ -1,0 +1,23 @@
+[Unit]
+Description=Lockpick Simulator Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/lockpick/server
+ExecStart=/usr/bin/python3 /home/pi/lockpick/server/server.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment (override sesuai kebutuhan)
+Environment=LOCKPICK_UNIT_NAME="Lockpick Unit 1"
+Environment=LOCKPICK_UNIT_ID="lockpick-unit-01"
+Environment=LOCKPICK_GPIO_PIN=24
+Environment=LOCKPICK_PORT=5000
+Environment=LOCKPICK_DB=/home/pi/lockpick/lockpick.db
+
+[Install]
+WantedBy=multi-user.target

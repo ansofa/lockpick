@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Lockpick History — Leaderboard dan riwayat sesi" />
+  <title>History — {{ unit_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="header" role="banner">
+    <div class="unit-badge">
+      <span class="unit-icon" aria-hidden="true">🔒</span>
+      <span class="unit-name">{{ unit_name }}</span>
+    </div>
+    <nav>
+      <a href="/" class="nav-link" id="nav-home">
+        <span aria-hidden="true">⬅</span> Dashboard
+      </a>
+    </nav>
+  </header>
+
+  <main class="main history-main" role="main">
+    <div class="history-wrap">
+
+      <!-- ─── Leaderboard ─────────────────────────────── -->
+      <section class="history-section" aria-labelledby="leaderboard-heading">
+        <div class="section-header">
+          <h2 class="section-title" id="leaderboard-heading">
+            <span aria-hidden="true">🏆</span> TOP 10 LEADERBOARD
+          </h2>
+        </div>
+
+        {% if leaderboard %}
+        <div class="table-wrap" role="region" aria-label="Top 10 leaderboard">
+          <table class="data-table" aria-describedby="leaderboard-heading">
+            <thead>
+              <tr>
+                <th scope="col" class="col-rank">#</th>
+                <th scope="col" class="col-player">PEMAIN</th>
+                <th scope="col" class="col-time">WAKTU</th>
+                <th scope="col" class="col-date">TANGGAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for session in leaderboard %}
+              <tr class="{% if loop.index == 1 %}row-gold{% elif loop.index == 2 %}row-silver{% elif loop.index == 3 %}row-bronze{% endif %}">
+                <td class="col-rank">
+                  {% if loop.index == 1 %}<span class="rank-icon" aria-label="Peringkat 1">🥇</span>
+                  {% elif loop.index == 2 %}<span class="rank-icon" aria-label="Peringkat 2">🥈</span>
+                  {% elif loop.index == 3 %}<span class="rank-icon" aria-label="Peringkat 3">🥉</span>
+                  {% else %}<span class="rank-num" aria-label="Peringkat {{ loop.index }}">{{ loop.index }}</span>
+                  {% endif %}
+                </td>
+                <td class="col-player player-name-cell">{{ session.player_name }}</td>
+                <td class="col-time">
+                  <span class="time-chip">{{ session.duration_display }}</span>
+                </td>
+                <td class="col-date">{{ session.created_at[:10] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" role="status">
+          <div class="empty-icon" aria-hidden="true">🎯</div>
+          <p>Belum ada sesi selesai.<br>Mainkan dulu di <a href="/" class="link-accent">Dashboard</a>!</p>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- ─── Semua Sesi ────────────────────────────────── -->
+      <section class="history-section" aria-labelledby="all-sessions-heading">
+        <div class="section-header">
+          <h2 class="section-title" id="all-sessions-heading">
+            <span aria-hidden="true">📋</span> RIWAYAT SESI
+          </h2>
+          <span class="session-count">{{ sessions|length }} sesi</span>
+        </div>
+
+        {% if sessions %}
+        <div class="table-wrap" role="region" aria-label="Semua sesi">
+          <table class="data-table" aria-describedby="all-sessions-heading">
+            <thead>
+              <tr>
+                <th scope="col" class="col-id">ID</th>
+                <th scope="col" class="col-player">PEMAIN</th>
+                <th scope="col" class="col-time">WAKTU</th>
+                <th scope="col" class="col-date">TANGGAL &amp; JAM</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for session in sessions %}
+              <tr>
+                <td class="col-id text-dim">#{{ session.id }}</td>
+                <td class="col-player player-name-cell">{{ session.player_name }}</td>
+                <td class="col-time">
+                  <span class="time-chip">{{ session.duration_display }}</span>
+                </td>
+                <td class="col-date text-dim">{{ session.created_at[:16].replace('T', ' ') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" role="status">
+          <div class="empty-icon" aria-hidden="true">📭</div>
+          <p>Belum ada riwayat sesi.</p>
+        </div>
+        {% endif %}
+      </section>
+
+    </div>
+  </main>
+</body>
+</html>
