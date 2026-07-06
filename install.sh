@@ -23,7 +23,7 @@ warn()    { echo -e "${YELLOW}[WARN]${RESET}  $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*"; exit 1; }
 
 # ─── Konfigurasi ──────────────────────────────────────────────────
-REPO_URL="https://github.com/[USERNAME]/lockpick"   # ← Ganti username GitHub Anda
+REPO_URL="https://github.com/ansofa/lockpick"   # ← Ganti username GitHub Anda
 INSTALL_DIR="/home/pi/lockpick"
 SERVICE_NAME="lockpick"
 PYTHON="python3"
