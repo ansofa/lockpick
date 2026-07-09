@@ -296,4 +296,10 @@ if __name__ == '__main__':
     print(f"  🔌 GPIO : Pin {config.GPIO_PIN}")
     print("=" * 50)
 
-    socketio.run(app, host=config.HOST, port=config.PORT, debug=False, allow_unsafe_werkzeug=True)
+    # Aktifkan auto-reload (debug=True) jika ada env var LOCKPICK_DEV=1
+    is_dev = os.environ.get('LOCKPICK_DEV') == '1'
+    if is_dev:
+        print("  🛠️  DEV MODE AKTIF (Auto-reload enabled)")
+        print("=" * 50)
+        
+    socketio.run(app, host=config.HOST, port=config.PORT, debug=is_dev, allow_unsafe_werkzeug=True)

@@ -13,4 +13,7 @@ echo "   URL : http://$(hostname -I | awk '{print $1}'):5000"
 echo ""
 
 cd "$SCRIPT_DIR/server"
+
+# Jalankan dalam mode development (mengaktifkan auto-reload)
+export LOCKPICK_DEV=1
 python3 server.py
