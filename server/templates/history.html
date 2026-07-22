@@ -43,7 +43,10 @@
               <tr>
                 <th scope="col" class="col-rank">#</th>
                 <th scope="col" class="col-player">PEMAIN</th>
+                <th scope="col">CHALLENGE</th>
                 <th scope="col" class="col-time">WAKTU</th>
+                <th scope="col">SKOR</th>
+                <th scope="col">VIOLATIONS</th>
                 <th scope="col" class="col-date">TANGGAL</th>
               </tr>
             </thead>
@@ -58,8 +61,17 @@
                   {% endif %}
                 </td>
                 <td class="col-player player-name-cell">{{ session.player_name }}</td>
+                <td style="font-size:0.75rem;">
+                  <span style="background:rgba(250,204,21,0.1);color:#fbbf24;border-radius:4px;padding:2px 6px;">{{ session.challenge_type or 'free' }}</span>
+                </td>
                 <td class="col-time">
                   <span class="time-chip">{{ session.duration_display }}</span>
+                </td>
+                <td style="font-family:'Roboto Mono',monospace;font-weight:700;color:#a5b4fc;">
+                  {{ session.score if session.score is not none else '—' }}
+                </td>
+                <td style="color:{% if (session.violations or 0) > 0 %}#f87171{% else %}#4ade80{% endif %};font-weight:600;">
+                  {{ session.violations or 0 }}
                 </td>
                 <td class="col-date">{{ session.created_at[:10] }}</td>
               </tr>
@@ -91,7 +103,11 @@
               <tr>
                 <th scope="col" class="col-id">ID</th>
                 <th scope="col" class="col-player">PEMAIN</th>
+                <th scope="col">CHALLENGE</th>
                 <th scope="col" class="col-time">WAKTU</th>
+                <th scope="col">SKOR</th>
+                <th scope="col">VIOLATIONS</th>
+                <th scope="col">STATUS</th>
                 <th scope="col" class="col-date">TANGGAL &amp; JAM</th>
               </tr>
             </thead>
@@ -100,8 +116,22 @@
               <tr>
                 <td class="col-id text-dim">#{{ session.id }}</td>
                 <td class="col-player player-name-cell">{{ session.player_name }}</td>
+                <td style="font-size:0.75rem;">
+                  <span style="background:rgba(250,204,21,0.1);color:#fbbf24;border-radius:4px;padding:2px 6px;">{{ session.challenge_type or 'free' }}</span>
+                </td>
                 <td class="col-time">
                   <span class="time-chip">{{ session.duration_display }}</span>
+                </td>
+                <td style="font-family:'Roboto Mono',monospace;font-weight:600;color:#a5b4fc;">
+                  {{ session.score if session.score is not none else '—' }}
+                </td>
+                <td style="color:{% if (session.violations or 0) > 0 %}#f87171{% else %}#4ade80{% endif %};">
+                  {{ session.violations or 0 }}
+                </td>
+                <td>
+                  {% if session.status == 'completed' %}<span style="color:#4ade80;font-size:0.75rem;">✓ Lulus</span>
+                  {% elif session.status == 'timeout'  %}<span style="color:#fbbf24;font-size:0.75rem;">⏰ Timeout</span>
+                  {% else %}<span style="color:var(--text-muted);font-size:0.75rem;">{{ session.status or '—' }}</span>{% endif %}
                 </td>
                 <td class="col-date text-dim">{{ session.created_at[:16].replace('T', ' ') }}</td>
               </tr>

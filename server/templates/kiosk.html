@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kiosk - Lockpick Training System</title>
+  <title>Kiosk — {{ unit_name }} | LPST</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
   <style>
-    /* Override khusus untuk Kiosk mode (Layar penuh, tanpa scroll) */
+    /* ── Kiosk overrides ───────────────────────────────────── */
     body {
       overflow: hidden;
       display: flex;
@@ -26,9 +26,233 @@
       flex-direction: column;
       justify-content: center;
     }
-    .card {
-      transform: scale(1.15); /* Diperbesar agar jelas di monitor Raspberry Pi */
-      margin: 0 auto;
+    .card { transform: scale(1.05); margin: 0 auto; }
+
+    /* ── Challenge selection cards ─────────────────────────── */
+    .challenge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .challenge-card {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+    .challenge-card:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .challenge-card.selected {
+      background: rgba(var(--accent-rgb, 99,102,241), 0.15);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 99,102,241), 0.25);
+    }
+    .challenge-card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.03em;
+    }
+    .challenge-card-desc {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .challenge-card-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 99px;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-easy    { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .badge-medium  { background: rgba(250,204,21,0.15); color: #fbbf24; }
+    .badge-hard    { background: rgba(239,68,68,0.15);  color: #f87171; }
+    .badge-stealth { background: rgba(168,85,247,0.15); color: #c084fc; }
+
+    /* ── Mortise select ────────────────────────────────────── */
+    .mortise-select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .mortise-select:focus { border-color: var(--accent); }
+    .mortise-select option { background: #1a1a2e; }
+
+    /* ── VU Meter ──────────────────────────────────────────── */
+    .vu-wrap {
+      margin: 0.9rem 0;
+    }
+    .vu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+    .vu-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .vu-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      transition: color 0.2s;
+    }
+    .vu-value.danger { color: #f87171; }
+    .vu-bar-track {
+      height: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+    .vu-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.1s linear, background-color 0.15s;
+      background: linear-gradient(90deg, #4ade80, #facc15, #f87171);
+      width: 0%;
+    }
+    .vu-threshold-line {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: rgba(248,113,113,0.8);
+      border-radius: 1px;
+    }
+
+    /* ── Violations counter ────────────────────────────────── */
+    .violation-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      color: #f87171;
+      transition: all 0.15s;
+    }
+    .violation-badge.flash {
+      background: rgba(239,68,68,0.35);
+      border-color: #f87171;
+      transform: scale(1.06);
+    }
+    .violation-count { font-weight: 700; font-family: 'Roboto Mono', monospace; }
+
+    /* ── Time limit countdown ──────────────────────────────── */
+    .countdown-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0.4rem 0;
+    }
+    .countdown-label { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; }
+    .countdown-value {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      transition: color 0.2s;
+    }
+    .countdown-value.urgent { color: #f87171; animation: blink 0.5s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0.4; } }
+
+    /* ── Result cards ──────────────────────────────────────── */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin: 0.8rem 0;
+    }
+    .result-cell {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 0.6rem;
+      text-align: center;
+    }
+    .result-cell-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: 'Roboto Mono', monospace;
+      color: var(--text-primary);
+    }
+    .result-cell-lbl {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-top: 0.15rem;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 1.2rem;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin: 0.5rem 0;
+    }
+    .status-completed { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+    .status-timeout   { background: rgba(250,204,21,0.15); color: #fbbf24; border: 1px solid rgba(250,204,21,0.3); }
+
+    /* ── Calibration overlay ───────────────────────────────── */
+    .calibration-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      gap: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .calibration-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .calibration-spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .calibration-text {
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
@@ -38,10 +262,17 @@
   <div class="bg-glow" aria-hidden="true"></div>
   <div class="bg-glow-bottom" aria-hidden="true"></div>
 
-  <!-- Main content (No Header for Kiosk) -->
+  <!-- Calibration overlay -->
+  <div class="calibration-overlay" id="calibration-overlay">
+    <div class="calibration-spinner"></div>
+    <div class="calibration-text">🎙️ Kalibrasi mic… Tetap tenang selama 2 detik</div>
+  </div>
+
   <main class="main" id="main-content" role="main">
 
-    <!-- STATE: IDLE -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- STATE: IDLE — Input nama                                    -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <section id="state-idle" class="state-panel active" aria-label="Halaman mulai">
       <div class="card" role="region">
         <h1 class="main-title">
@@ -65,76 +296,204 @@
             <div class="field-bar"></div>
           </div>
           <p id="form-error" class="form-error" role="alert"></p>
-          <button type="submit" class="btn btn-start" id="btn-start">
-            <span class="btn-icon" aria-hidden="true">▶</span> MULAI EVALUASI
+          <button type="submit" class="btn btn-start" id="btn-next-challenge">
+            <span class="btn-icon" aria-hidden="true">▶</span> LANJUT PILIH CHALLENGE
           </button>
         </form>
+
+        <!-- Door status idle -->
+        <div class="door-pill" id="idle-door-pill" role="status" aria-live="polite" style="margin-top:1rem;">
+          <span class="door-dot locked" id="idle-door-dot"></span>
+          <span id="idle-door-text">Mengecek sensor…</span>
+        </div>
       </div>
     </section>
 
-    <!-- STATE: READY -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- STATE: CHALLENGE SELECT — Pilih challenge & mortise         -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="state-challenge" class="state-panel" aria-label="Pilih challenge">
+      <div class="card" role="region">
+        <h2 style="font-size:1.1rem; letter-spacing:0.12em; color:var(--text-muted); margin-bottom:0.8rem;">PILIH CHALLENGE</h2>
+
+        <div class="challenge-grid" id="challenge-grid">
+          {% for ch in challenges %}
+          <div class="challenge-card{% if loop.first %} selected{% endif %}"
+               data-challenge="{{ ch.challenge_type }}"
+               data-time-limit="{{ ch.time_limit_sec }}"
+               data-show-db="{{ ch.show_db_meter }}"
+               onclick="selectChallenge(this)">
+            <div class="challenge-card-badge
+              {% if ch.time_limit_sec == 0 %}badge-easy
+              {% elif ch.db_threshold >= 999 %}badge-medium
+              {% elif ch.show_db_meter == 0 %}badge-hard
+              {% else %}badge-stealth{% endif %}">
+              {% if ch.time_limit_sec == 0 %}BEBAS
+              {% elif ch.db_threshold >= 999 %}SPEED
+              {% elif ch.show_db_meter == 0 %}BLIND
+              {% else %}STEALTH{% endif %}
+            </div>
+            <div class="challenge-card-title">{{ ch.label }}</div>
+            <div class="challenge-card-desc">
+              {% if ch.time_limit_sec > 0 %}⏱ {{ ch.time_limit_sec }}s{% else %}⏱ Bebas{% endif %}
+              {% if ch.db_threshold < 999 %} &nbsp;·&nbsp; 🔇 Max {{ ch.db_threshold|int }} dB{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div style="margin: 0.8rem 0 0.4rem;">
+          <label style="font-size:0.7rem;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:0.4rem;">MORTISE TERPASANG</label>
+          <select id="mortise-select" class="mortise-select">
+            {% for m in mortises %}
+            <option value="{{ m.id }}" data-diff="{{ m.difficulty }}">
+              {{ m.label }} (Diff. {{ m.difficulty }}/5)
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display:flex;gap:0.6rem;margin-top:1rem;">
+          <button class="btn btn-outline" style="flex:1;" onclick="goToIdle()">← KEMBALI</button>
+          <button class="btn btn-start" style="flex:2;" id="btn-confirm-challenge" onclick="confirmChallenge()">
+            KONFIRMASI →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- STATE: READY — Standby sebelum mulai                        -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <section id="state-ready" class="state-panel" aria-label="Bersiap mulai">
       <div class="card card-ready" role="region">
-        <h2 class="success-title" style="color: var(--blue); font-size: 2rem;">STANDBY</h2>
-        
+        <h2 class="success-title" style="color: var(--blue); font-size: 1.8rem;">STANDBY</h2>
+
         <div class="player-chip" id="ready-player-name">
           <span aria-hidden="true">👤</span> —
         </div>
 
-        <div class="door-pill" id="ready-door-pill" role="status" aria-live="polite" style="margin-top: 1rem;">
+        <div style="margin:0.6rem 0; font-size:0.8rem; color:var(--text-muted); text-align:center;">
+          <span id="ready-challenge-label" style="font-weight:600;color:var(--text-primary);">—</span>
+          &nbsp;·&nbsp;
+          <span id="ready-mortise-label">—</span>
+        </div>
+
+        <div class="door-pill" id="ready-door-pill" role="status" aria-live="polite" style="margin-top:0.8rem;">
           <span class="door-dot locked" id="ready-door-dot"></span>
           <span id="ready-door-text">Mengecek sensor…</span>
         </div>
-        
-        <p class="subtitle" style="margin-top: 1.5rem; margin-bottom: 2rem; max-width: 300px; margin-left: auto; margin-right: auto;">
-          Sistem siap. Waktu akan dihitung seketika saat tombol ditekan.
+
+        <p class="subtitle" style="margin:1rem auto 1.5rem; max-width:300px;">
+          Pastikan deadbolt terkunci, mic dalam posisi siap.<br>
+          Waktu dihitung saat tombol <strong>MULAI</strong> ditekan.
         </p>
-        
-        <button class="btn btn-start" id="btn-start-ready" onclick="startReadySession()" style="width: 100%; margin-bottom: 1rem;">
-          <span class="btn-icon" aria-hidden="true">▶</span> MULAI EVALUASI
+
+        <button class="btn btn-start" id="btn-start-ready" onclick="startReadySession()" style="width:100%;margin-bottom:0.7rem;">
+          <span class="btn-icon" aria-hidden="true">▶</span> MULAI SESI
         </button>
-        
-        <button class="btn btn-outline" id="btn-cancel-ready" onclick="resetSession()" style="width: 100%;">
+        <button class="btn btn-outline" id="btn-cancel-ready" onclick="resetSession()" style="width:100%;">
           BATALKAN
         </button>
       </div>
     </section>
 
-    <!-- STATE: RUNNING -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- STATE: RUNNING — Sesi berjalan                              -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <section id="state-running" class="state-panel" aria-label="Sesi berjalan">
       <div class="card card-running" role="region">
         <div class="player-chip" id="running-player-name">
           <span aria-hidden="true">👤</span> —
         </div>
+
+        <!-- Timer utama -->
         <div class="timer-wrap" role="timer" aria-label="Waktu berlalu">
           <div class="timer" id="timer-display" aria-live="off">00:00.000</div>
           <div class="timer-label">ELAPSED TIME</div>
         </div>
-        <div class="door-pill large" id="running-door-pill" role="status">
-          <span class="door-dot locked pulse" id="running-door-dot"></span>
-          <span id="running-door-text">DEADBOLT AKTIF</span>
+
+        <!-- Countdown (jika ada time limit) -->
+        <div class="countdown-wrap" id="countdown-wrap" style="display:none;">
+          <span class="countdown-label">SISA WAKTU</span>
+          <span class="countdown-value" id="countdown-value">--:--</span>
         </div>
-        <p class="mission-hint">Buka deadbolt secepat mungkin.</p>
+
+        <!-- VU Meter desibel -->
+        <div class="vu-wrap" id="vu-wrap">
+          <div class="vu-header">
+            <span class="vu-label">🎙️ LEVEL SUARA</span>
+            <span class="vu-value" id="vu-db-value">0.0 dB</span>
+          </div>
+          <div class="vu-bar-track">
+            <div class="vu-bar-fill" id="vu-bar-fill"></div>
+            <div class="vu-threshold-line" id="vu-threshold-line" style="left:60%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:0.25rem;">
+            <span style="font-size:0.58rem;color:var(--text-muted);">0</span>
+            <span style="font-size:0.58rem;color:var(--text-muted);" id="vu-threshold-label">LIMIT</span>
+            <span style="font-size:0.58rem;color:var(--text-muted);">MAX</span>
+          </div>
+        </div>
+
+        <!-- Violations counter -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+          <div class="door-pill" id="running-door-pill" role="status">
+            <span class="door-dot locked pulse" id="running-door-dot"></span>
+            <span id="running-door-text">DEADBOLT AKTIF</span>
+          </div>
+          <div class="violation-badge" id="violation-badge">
+            🔊 <span class="violation-count" id="violation-count">0</span> VIOLATION
+          </div>
+        </div>
+
+        <p class="mission-hint">Buka deadbolt secepat mungkin dengan teknik minimum suara.</p>
+
         <button class="btn btn-reset" id="btn-reset-running" onclick="resetSession()">
           <span aria-hidden="true">↺</span> RESET
         </button>
       </div>
     </section>
 
-    <!-- STATE: STOPPED -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- STATE: STOPPED — Hasil sesi                                 -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <section id="state-stopped" class="state-panel" aria-label="Sesi selesai">
       <div class="card card-success" role="region">
-        <div class="success-trophy" aria-hidden="true">✅</div>
-        <h2 class="success-title">SIMULASI SELESAI</h2>
-        <p class="subtitle" style="margin-bottom: 10px;">Evaluasi waktu pembobolan:</p>
+        <div class="success-trophy" id="result-trophy" aria-hidden="true">✅</div>
+        <h2 class="success-title">SESI SELESAI</h2>
+
         <div class="player-chip" id="stopped-player-name">
           <span aria-hidden="true">👤</span> —
         </div>
-        <div class="result-time" id="result-time-display" role="status">00:00.000</div>
-        <div class="result-label">TOTAL WAKTU</div>
+
+        <div id="result-status-badge" class="status-badge status-completed">LULUS</div>
+
+        <!-- Hasil detail -->
+        <div class="result-grid">
+          <div class="result-cell">
+            <div class="result-cell-val" id="res-time">--:---.---</div>
+            <div class="result-cell-lbl">Waktu</div>
+          </div>
+          <div class="result-cell">
+            <div class="result-cell-val" id="res-score" style="color:var(--accent);">—</div>
+            <div class="result-cell-lbl">Skor</div>
+          </div>
+          <div class="result-cell">
+            <div class="result-cell-val" id="res-violations" style="color:#f87171;">0</div>
+            <div class="result-cell-lbl">Violations</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:1rem;">
+          Max noise: <span id="res-max-db" style="color:var(--text-primary);font-family:monospace;">0.0</span> dB
+          &nbsp;·&nbsp;
+          Challenge: <span id="res-challenge" style="color:var(--text-primary);">—</span>
+        </div>
+
         <div class="result-actions">
-          <button class="btn btn-start" id="btn-play-again" onclick="resetSession()">
-            <span class="btn-icon" aria-hidden="true">🔄</span> ULANGI SIMULASI
+          <button class="btn btn-start" id="btn-play-again" onclick="resetSession()" style="width:100%;">
+            <span class="btn-icon" aria-hidden="true">🔄</span> ULANGI SESI
           </button>
         </div>
       </div>
@@ -144,7 +503,11 @@
 
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <!-- Scripts -->
+  <!-- Challenge data untuk JS -->
+  <script>
+    const CHALLENGES = {{ challenges | tojson }};
+    const MORTISES   = {{ mortises  | tojson }};
+  </script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
   <script src="/static/app.js"></script>
 </body>

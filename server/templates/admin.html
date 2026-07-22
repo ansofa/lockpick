@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Evaluator — Training System</title>
+  <title>Panel Instruktur — LPST</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
   <style>
     .admin-grid {
@@ -25,6 +25,51 @@
       padding: 24px;
       backdrop-filter: blur(16px);
     }
+    .score-chip {
+      display: inline-block;
+      background: rgba(99,102,241,0.15);
+      color: #a5b4fc;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: 'Roboto Mono', monospace;
+    }
+    .violation-chip {
+      display: inline-block;
+      background: rgba(239,68,68,0.12);
+      color: #f87171;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .challenge-chip {
+      display: inline-block;
+      background: rgba(250,204,21,0.1);
+      color: #fbbf24;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+    }
+    .status-chip-ok  { color: #4ade80; font-size:0.75rem; }
+    .status-chip-to  { color: #fbbf24; font-size:0.75rem; }
+    .search-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.45rem 0.9rem;
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-family: inherit;
+      width: 200px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .audio-dev-list { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; }
+    .audio-dev-item { padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .audio-dev-item:last-child { border-bottom: none; }
+    .audio-active { color: #4ade80; }
   </style>
 </head>
 <body>
@@ -94,9 +139,17 @@
 
         <!-- History Panel -->
         <div class="panel" style="overflow-x: auto;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <h3 class="section-title">LOG PELATIHAN</h3>
-            <span class="session-count" id="session-count">{{ sessions|length }} Total</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 16px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <h3 class="section-title">LOG PELATIHAN</h3>
+              <span class="session-count" id="session-count">{{ sessions|length }} Total</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="search-player" class="search-input" placeholder="🔍 Cari peserta…" oninput="filterTable()" />
+              <a href="/admin/export_csv" class="btn btn-outline" style="font-size:0.75rem;padding:0.4rem 0.8rem;">
+                ⬇ Export CSV
+              </a>
+            </div>
           </div>
 
           <table class="data-table" id="sessions-table">
@@ -104,7 +157,12 @@
               <tr>
                 <th>ID</th>
                 <th>NAMA</th>
+                <th>CHALLENGE</th>
+                <th>MORTISE</th>
                 <th>WAKTU</th>
+                <th>SKOR</th>
+                <th>VIO</th>
+                <th>STATUS</th>
                 <th>TANGGAL</th>
                 <th>AKSI</th>
               </tr>
@@ -112,9 +170,11 @@
             <tbody id="sessions-tbody">
               {% if sessions %}
                 {% for s in sessions %}
-                <tr>
+                <tr data-player="{{ s.player_name|lower }}">
                   <td class="text-dim">#{{ s.id }}</td>
                   <td class="player-name-cell">{{ s.player_name }}</td>
+                  <td><span class="challenge-chip">{{ s.challenge_type or 'free' }}</span></td>
+                  <td class="text-dim" style="font-size:0.75rem;">{{ s.mortise_id or '—' }}</td>
                   <td>
                     {% if s.duration_ms %}
                     <span class="time-chip">{{ s.duration_display }}</span>
@@ -122,20 +182,45 @@
                     <span class="text-dim">Dibatalkan</span>
                     {% endif %}
                   </td>
-                  <td class="text-dim">{{ s.start_time }}</td>
+                  <td><span class="score-chip">{{ s.score if s.score is not none else '—' }}</span></td>
+                  <td><span class="violation-chip">{{ s.violations or 0 }}</span></td>
+                  <td>
+                    {% if s.status == 'completed' %}<span class="status-chip-ok">✓ Lulus</span>
+                    {% elif s.status == 'timeout'  %}<span class="status-chip-to">⏰ Timeout</span>
+                    {% else %}<span class="text-dim">{{ s.status or '—' }}</span>{% endif %}
+                  </td>
+                  <td class="text-dim" style="font-size:0.72rem;">{{ s.start_time[:16] }}</td>
                   <td>
                     <form action="/admin/delete_session/{{ s.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data ini?');">
-                      <button type="submit" style="background:transparent; border:none; color:var(--danger); cursor:pointer;">Hapus</button>
+                      <button type="submit" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:0.8rem;">Hapus</button>
                     </form>
                   </td>
                 </tr>
                 {% endfor %}
               {% else %}
-                <tr id="empty-row"><td colspan="5" class="text-dim" style="text-align:center; padding: 30px;">Belum ada riwayat pelatihan.</td></tr>
+                <tr id="empty-row"><td colspan="10" class="text-dim" style="text-align:center; padding: 30px;">Belum ada riwayat pelatihan.</td></tr>
               {% endif %}
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Audio Devices Info -->
+      <div class="panel" style="margin-top:24px;">
+        <h3 class="section-title" style="margin-bottom:12px;">🎙️ PERANGKAT AUDIO INPUT</h3>
+        {% if audio_devices %}
+          <div class="audio-dev-list">
+            {% for dev in audio_devices %}
+            <div class="audio-dev-item">
+              <span style="color:var(--text-muted);">[{{ dev.index }}]</span>
+              <span class="{% if 'usb' in dev.name|lower or 'microphone' in dev.name|lower %}audio-active{% else %}text-dim{% endif %}">{{ dev.name }}</span>
+              <span style="color:var(--text-muted); float:right;">ch:{{ dev.channels }} · {{ dev.sample_rate }} Hz</span>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-dim" style="font-size:0.8rem;">sounddevice tidak tersedia — mode simulasi aktif.</p>
+        {% endif %}
       </div>
     </div>
   </main>
@@ -148,12 +233,24 @@
     function remoteStart() {
       const name = document.getElementById('remote-name').value.trim();
       if (!name) {
-        alert("Masukkan ID peserta terlebih dahulu!");
+        alert('Masukkan ID peserta terlebih dahulu!');
         return;
       }
-      socket.emit('prepare_session', { player_name: name });
+      socket.emit('prepare_session', {
+        player_name:    name,
+        challenge_type: 'free_practice',
+        mortise_id:     'basic_3pin',
+      });
       document.getElementById('remote-name').value = '';
-      alert("Sistem disiapkan! Peserta dapat menekan MULAI SIMULASI di perangkat.");
+      alert('Sistem disiapkan! Peserta dapat menekan MULAI SESI di perangkat.');
+    }
+
+    // Filter tabel berdasarkan nama peserta
+    function filterTable() {
+      const q = (document.getElementById('search-player').value || '').toLowerCase();
+      document.querySelectorAll('#sessions-tbody tr[data-player]').forEach(tr => {
+        tr.style.display = tr.dataset.player.includes(q) ? '' : 'none';
+      });
     }
 
     function remoteReset() {
@@ -190,24 +287,38 @@
         
         sessions.forEach(s => {
           const tr = document.createElement('tr');
-          const durationHtml = s.duration_ms 
-            ? `<span class="time-chip">${formatMs(s.duration_ms)}</span>` 
+          tr.dataset.player = (s.player_name || '').toLowerCase();
+          const durationHtml = s.duration_ms
+            ? `<span class="time-chip">${formatMs(s.duration_ms)}</span>`
             : `<span class="text-dim">Dibatalkan</span>`;
-            
+          const statusHtml = s.status === 'completed'
+            ? `<span class="status-chip-ok">✓ Lulus</span>`
+            : s.status === 'timeout'
+            ? `<span class="status-chip-to">⏰ Timeout</span>`
+            : `<span class="text-dim">${s.status || '—'}</span>`;
+
           tr.innerHTML = `
             <td class="text-dim">#${s.id}</td>
             <td class="player-name-cell">${s.player_name}</td>
+            <td><span class="challenge-chip">${s.challenge_type || 'free'}</span></td>
+            <td class="text-dim" style="font-size:0.75rem;">${s.mortise_id || '—'}</td>
             <td>${durationHtml}</td>
-            <td class="text-dim">${s.start_time}</td>
+            <td><span class="score-chip">${s.score != null ? s.score : '—'}</span></td>
+            <td><span class="violation-chip">${s.violations || 0}</span></td>
+            <td>${statusHtml}</td>
+            <td class="text-dim" style="font-size:0.72rem;">${(s.start_time||'').slice(0,16)}</td>
             <td>
-              <form action="/admin/delete_session/${s.id}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data ini?');">
-                <button type="submit" style="background:transparent; border:none; color:var(--danger); cursor:pointer;">Hapus</button>
+              <form action="/admin/delete_session/${s.id}" method="POST" style="display:inline;"
+                    onsubmit="return confirm('Hapus data ini?');">
+                <button type="submit" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:0.8rem;">Hapus</button>
               </form>
             </td>
           `;
           tbody.appendChild(tr);
         });
-      } catch (e) {
+        // Re-apply filter
+        if (document.getElementById('search-player')) filterTable();
+      } catch(e) {
         console.error("Gagal update tabel log:", e);
       }
     }
