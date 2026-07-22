@@ -53,6 +53,7 @@ info "Menginstall dependensi sistem..."
 sudo apt-get install -y -qq \
     python3 python3-pip python3-venv \
     python3-dev \
+    liblgpio-dev \
     libportaudio2 portaudio19-dev \
     git \
     chromium-browser \
@@ -60,6 +61,12 @@ sudo apt-get install -y -qq \
     unclutter
 
 success "Dependensi sistem terinstall."
+
+# ─── Tambah user ke group gpio (agar gpiozero/lgpio bisa akses /dev/gpiomem) ──
+info "Menambahkan user ke group gpio dan dialout..."
+sudo usermod -aG gpio,dialout,audio pi
+success "User pi ditambahkan ke group gpio, dialout, audio."
+
 
 # ─── Clone atau update repo ───────────────────────────────────────
 if [ -d "$INSTALL_DIR" ]; then
