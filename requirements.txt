@@ -4,9 +4,9 @@ flask-socketio>=5.3.6
 eventlet>=0.35.0
 
 # Raspberry Pi GPIO (proximity sensor)
-# lgpio adalah pin factory yang direkomendasikan untuk RPi OS Bookworm + Python 3.13
+# lgpio diinstall via: sudo apt install python3-lgpio
+# (JANGAN install lgpio via pip — butuh swig untuk build)
 gpiozero>=2.0
-lgpio>=0.2.2.0
 
 # Audio monitoring (USB microphone)
 sounddevice>=0.4.6

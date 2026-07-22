@@ -82,7 +82,7 @@ success "Kode project tersedia di $INSTALL_DIR"
 
 # ─── Buat virtualenv & install Python dependencies ────────────
 info "Membuat/memperbarui virtual environment di $VENV_DIR ..."
-$PYTHON -m venv "$VENV_DIR"
+$PYTHON -m venv --system-site-packages "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --upgrade pip -q
 
 info "Menginstall Python dependencies ke virtualenv..."

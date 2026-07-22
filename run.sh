@@ -24,7 +24,8 @@ fi
 # ── Buat virtualenv jika belum ada ───────────────────────────
 if [ ! -f "$VENV_DIR/bin/activate" ]; then
     echo "[SETUP] Membuat virtual environment di $VENV_DIR ..."
-    python3 -m venv "$VENV_DIR"
+    # --system-site-packages: venv bisa 'lihat' package sistem RPi (lgpio, RPi.GPIO, dll)
+    python3 -m venv --system-site-packages "$VENV_DIR"
     echo "[SETUP] Menginstall dependensi..."
     "$VENV_DIR/bin/pip" install --upgrade pip -q
     "$VENV_DIR/bin/pip" install -q -r "$REQ_FILE"
