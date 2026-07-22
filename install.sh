@@ -25,9 +25,9 @@ error()   { echo -e "${RED}[ERROR]${RESET} $*"; exit 1; }
 # ─── Konfigurasi ──────────────────────────────────────────────────
 REPO_URL="https://github.com/ansofa/lockpick"   # ← Ganti username GitHub Anda
 INSTALL_DIR="/home/pi/lockpick"
+VENV_DIR="$INSTALL_DIR/.venv"
 SERVICE_NAME="lockpick"
 PYTHON="python3"
-PIP="pip3"
 
 # ─── Banner ───────────────────────────────────────────────────────
 echo ""
@@ -52,6 +52,8 @@ sudo apt-get update -qq
 info "Menginstall dependensi sistem..."
 sudo apt-get install -y -qq \
     python3 python3-pip python3-venv \
+    python3-dev \
+    libportaudio2 portaudio19-dev \
     git \
     chromium-browser \
     xdotool \
@@ -71,10 +73,14 @@ fi
 
 success "Kode project tersedia di $INSTALL_DIR"
 
-# ─── Install Python dependencies ─────────────────────────────────
-info "Menginstall Python dependencies..."
-$PIP install -q -r "$INSTALL_DIR/requirements.txt"
-success "Python dependencies terinstall."
+# ─── Buat virtualenv & install Python dependencies ────────────
+info "Membuat/memperbarui virtual environment di $VENV_DIR ..."
+$PYTHON -m venv "$VENV_DIR"
+"$VENV_DIR/bin/pip" install --upgrade pip -q
+
+info "Menginstall Python dependencies ke virtualenv..."
+"$VENV_DIR/bin/pip" install -q -r "$INSTALL_DIR/requirements.txt"
+success "Python dependencies terinstall di virtualenv."
 
 # ─── Setup systemd service ────────────────────────────────────────
 info "Menginstall systemd service..."
