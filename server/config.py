@@ -26,3 +26,6 @@ DATABASE_PATH = os.environ.get(
 
 # Versi aplikasi
 VERSION = '1.0.0'
+
+# Admin Password
+ADMIN_PASSWORD = os.environ.get('LOCKPICK_ADMIN_PASS', 'admin123')

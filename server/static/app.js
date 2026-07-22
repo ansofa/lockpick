@@ -15,12 +15,14 @@ const socket = io({ reconnectionDelayMax: 3000 });
 // ─── DOM References ──────────────────────────────────────────
 const panels = {
   idle:    document.getElementById('state-idle'),
+  ready:   document.getElementById('state-ready'),
   running: document.getElementById('state-running'),
   stopped: document.getElementById('state-stopped'),
 };
 
 const $timerDisplay     = document.getElementById('timer-display');
 const $resultTime       = document.getElementById('result-time-display');
+const $readyPlayer      = document.getElementById('ready-player-name');
 const $runningPlayer    = document.getElementById('running-player-name');
 const $stoppedPlayer    = document.getElementById('stopped-player-name');
 const $startForm        = document.getElementById('start-form');
@@ -30,13 +32,43 @@ const $formError        = document.getElementById('form-error');
 // Door status elements (idle panel)
 const $idleDot   = document.getElementById('idle-door-dot');
 const $idleText  = document.getElementById('idle-door-text');
+// Door status elements (ready panel)
+const $readyDot  = document.getElementById('ready-door-dot');
+const $readyText = document.getElementById('ready-door-text');
 // Door status elements (running panel)
 const $runDot    = document.getElementById('running-door-dot');
 const $runText   = document.getElementById('running-door-text');
 
 // ─── App State ───────────────────────────────────────────────
-let currentPanel  = 'idle';
-let doorIsLocked  = true;
+let currentPanel     = 'idle';
+let doorIsLocked     = true;
+let timerRafId       = null;
+let sessionStartTime = null;
+
+// ─── Local Timer (rAF) ───────────────────────────────────────
+function startLocalTimer(elapsedOffset = 0) {
+  stopLocalTimer();
+  sessionStartTime = performance.now() - elapsedOffset;
+  
+  function update() {
+    if (currentPanel !== 'running') return;
+    const now = performance.now();
+    const elapsed = Math.max(0, now - sessionStartTime);
+    if ($timerDisplay) {
+      $timerDisplay.textContent = formatMs(elapsed);
+    }
+    timerRafId = requestAnimationFrame(update);
+  }
+  
+  timerRafId = requestAnimationFrame(update);
+}
+
+function stopLocalTimer() {
+  if (timerRafId) {
+    cancelAnimationFrame(timerRafId);
+    timerRafId = null;
+  }
+}
 
 // ─── State Machine ───────────────────────────────────────────
 function showPanel(name) {
@@ -58,6 +90,12 @@ function updateDoor(locked) {
     $idleDot.className = 'door-dot ' + dotClass;
   }
   if ($idleText) $idleText.textContent = labelText;
+
+  // Ready panel
+  if ($readyDot) {
+    $readyDot.className = 'door-dot ' + dotClass;
+  }
+  if ($readyText) $readyText.textContent = labelText;
 
   // Running panel
   if ($runDot) {
@@ -85,9 +123,10 @@ socket.on('state_sync', (data) => {
   if (data.mode === 'running') {
     showPanel('running');
     setPlayerChip($runningPlayer, data.player_name);
-    if ($timerDisplay && data.elapsed_ms > 0) {
-      $timerDisplay.textContent = data.display || formatMs(data.elapsed_ms);
-    }
+    startLocalTimer(data.elapsed_ms || 0);
+  } else if (data.mode === 'ready') {
+    showPanel('ready');
+    setPlayerChip($readyPlayer, data.player_name);
   } else if (data.mode === 'stopped') {
     showPanel('stopped');
     setPlayerChip($stoppedPlayer, data.player_name);
@@ -104,23 +143,24 @@ socket.on('door_status', (data) => {
   updateDoor(data.locked);
 });
 
-/** timer_update — emit setiap 50ms dari server saat running. */
-socket.on('timer_update', (data) => {
-  if (currentPanel === 'running' && $timerDisplay) {
-    $timerDisplay.textContent = data.display || formatMs(data.elapsed_ms);
-  }
+/** session_ready — siap dimulai, masuk ke page standby. */
+socket.on('session_ready', (data) => {
+  showPanel('ready');
+  setPlayerChip($readyPlayer, data.player_name);
+  clearError();
 });
 
 /** session_start — sesi dimulai (bisa dari client lain). */
 socket.on('session_start', (data) => {
   showPanel('running');
   setPlayerChip($runningPlayer, data.player_name);
-  if ($timerDisplay) $timerDisplay.textContent = '00:00.000';
   clearError();
+  startLocalTimer(0);
 });
 
 /** session_complete — sesi selesai otomatis (sensor unlock). */
 socket.on('session_complete', (data) => {
+  stopLocalTimer();
   showPanel('stopped');
   setPlayerChip($stoppedPlayer, data.player_name);
   if ($resultTime) $resultTime.textContent = data.display_time || formatMs(data.duration_ms);
@@ -129,6 +169,7 @@ socket.on('session_complete', (data) => {
 
 /** session_reset — semua client kembali ke idle. */
 socket.on('session_reset', () => {
+  stopLocalTimer();
   showPanel('idle');
   if ($timerDisplay) $timerDisplay.textContent = '00:00.000';
   if ($playerInput) $playerInput.value = '';
@@ -147,15 +188,18 @@ if ($startForm) {
       return;
     }
 
-    if (!doorIsLocked) {
-      showError('Pastikan deadbolt terkunci sebelum memulai!');
-      showToast('🔒 Kunci deadbolt terlebih dahulu', 'error');
-      return;
-    }
-
     clearError();
-    socket.emit('start_session', { player_name: name });
+    socket.emit('prepare_session', { player_name: name });
   });
+}
+
+/** Dipanggil dari halaman ready. */
+function startReadySession() {
+  if (!doorIsLocked) {
+    showToast('🔒 Kunci deadbolt terlebih dahulu', 'error');
+    return;
+  }
+  socket.emit('start_session', {});
 }
 
 /** Dipanggil oleh tombol RESET dan MAIN LAGI (via onclick di HTML). */

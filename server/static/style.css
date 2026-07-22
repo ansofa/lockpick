@@ -1,42 +1,42 @@
 /* ══════════════════════════════════════════════════════════════
-   Lockpick Simulator — Premium Dark Cyberpunk Theme
+   Lockpick Simulator — Professional Tactical Training Theme
    ══════════════════════════════════════════════════════════════ */
 
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
-  --bg:           #07070f;
-  --surface:      rgba(255, 255, 255, 0.04);
-  --surface-hover:rgba(255, 255, 255, 0.07);
-  --border:       rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.16);
+  --bg:           #12141a;
+  --surface:      #1c1f28;
+  --surface-hover:#262a36;
+  --border:       #333845;
+  --border-hover: #4b5263;
 
-  --accent:       #00ff88;
-  --accent-dim:   rgba(0, 255, 136, 0.15);
-  --accent-glow:  rgba(0, 255, 136, 0.35);
+  --accent:       #10b981; /* Standard Green */
+  --accent-dim:   rgba(16, 185, 129, 0.15);
+  --accent-glow:  rgba(16, 185, 129, 0.1);
 
-  --danger:       #ff3a6e;
-  --danger-dim:   rgba(255, 58, 110, 0.15);
-  --danger-glow:  rgba(255, 58, 110, 0.35);
+  --danger:       #ef4444; /* Standard Red */
+  --danger-dim:   rgba(239, 68, 68, 0.15);
+  --danger-glow:  rgba(239, 68, 68, 0.1);
 
-  --gold:         #ffd700;
-  --gold-glow:    rgba(255, 215, 0, 0.4);
-  --silver:       #c0c0c0;
-  --bronze:       #cd7f32;
+  --gold:         #f59e0b; /* Amber */
+  --gold-glow:    rgba(245, 158, 11, 0.1);
+  --silver:       #94a3b8;
+  --bronze:       #b45309;
 
-  --blue:         #60a5fa;
+  --blue:         #3b82f6; /* Technical Blue */
 
-  --text:         #e8e8f2;
-  --text-dim:     #5a5a7a;
-  --text-muted:   #3a3a5a;
+  --text:         #f1f5f9;
+  --text-dim:     #94a3b8;
+  --text-muted:   #64748b;
 
-  --radius-sm:    10px;
-  --radius:       18px;
-  --radius-lg:    24px;
+  --radius-sm:    4px;
+  --radius:       6px;
+  --radius-lg:    8px; /* Boxy feel */
 
-  --shadow:       0 24px 60px rgba(0, 0, 0, 0.7);
-  --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow:       0 8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-card:  0 4px 15px rgba(0, 0, 0, 0.3);
 
-  --transition:   0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:   0.15s ease-out;
 }
 
 /* ─── Reset ──────────────────────────────────────────────────── */
@@ -58,22 +58,17 @@ body {
 .bg-grid {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-  background-size: 44px 44px;
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
 }
 
 .bg-glow {
-  position: fixed; top: -30%; left: 50%; z-index: 0; pointer-events: none;
-  transform: translateX(-50%);
-  width: 700px; height: 700px;
-  background: radial-gradient(ellipse, rgba(0,255,136,0.05) 0%, transparent 70%);
+  display: none;
 }
 
 .bg-glow-bottom {
-  position: fixed; bottom: -20%; right: -10%; z-index: 0; pointer-events: none;
-  width: 500px; height: 500px;
-  background: radial-gradient(ellipse, rgba(255,58,110,0.04) 0%, transparent 70%);
+  display: none;
 }
 
 /* ─── Header ─────────────────────────────────────────────────── */
@@ -82,9 +77,7 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 28px;
   border-bottom: 1px solid var(--border);
-  background: rgba(7, 7, 15, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--surface);
 }
 
 .unit-badge {
@@ -129,7 +122,7 @@ body {
 /* ─── State Panels ───────────────────────────────────────────── */
 .state-panel {
   display: none;
-  width: 100%; max-width: 460px;
+  width: 100%; max-width: 520px;
 }
 
 .state-panel.active {
@@ -144,42 +137,39 @@ body {
 
 /* ─── Card ───────────────────────────────────────────────────── */
 .card {
-  background: rgba(255,255,255,0.038);
+  background: var(--surface);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--blue);
   border-radius: var(--radius-lg);
   padding: 44px 40px;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   box-shadow: var(--shadow);
   text-align: center;
 }
 
 .card-running {
-  border-color: rgba(255,58,110,0.2);
-  box-shadow: var(--shadow), 0 0 60px rgba(255,58,110,0.06);
+  border-top-color: var(--danger);
 }
 
 .card-success {
-  border-color: rgba(0,255,136,0.2);
-  box-shadow: var(--shadow), 0 0 60px rgba(0,255,136,0.06);
+  border-top-color: var(--accent);
 }
 
 /* ─── Title (Idle) ───────────────────────────────────────────── */
 .main-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 3rem; font-weight: 900;
-  line-height: 1.05; letter-spacing: 3px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 2.2rem; font-weight: 700;
+  line-height: 1.2; letter-spacing: 1px;
   margin-bottom: 10px;
+  color: var(--text);
 }
 
 .main-title-sub {
-  font-size: 1.4rem; font-weight: 400;
-  color: var(--text-dim); letter-spacing: 6px;
+  font-size: 1.2rem; font-weight: 400;
+  color: var(--text-dim); letter-spacing: 2px;
 }
 
 .accent {
-  color: var(--accent);
-  text-shadow: 0 0 28px var(--accent-glow);
+  color: var(--blue);
 }
 
 .subtitle {
@@ -280,23 +270,22 @@ body {
 /* ─── Buttons ────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: 10px; width: 100%; padding: 16px 24px;
-  border: none; border-radius: var(--radius-sm);
-  font-family: 'Orbitron', monospace; font-size: 0.8rem;
-  font-weight: 700; letter-spacing: 1.5px;
+  gap: 10px; width: 100%; padding: 14px 24px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  font-family: 'Roboto Mono', monospace; font-size: 0.9rem;
+  font-weight: 700; letter-spacing: 1px;
   cursor: pointer; text-decoration: none;
   transition: var(--transition); user-select: none;
 }
 
 .btn-start {
-  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
-  color: #041a10;
-  box-shadow: 0 4px 20px rgba(0,255,136,0.2);
+  background: var(--blue);
+  color: #fff;
 }
 
 .btn-start:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,255,136,0.4);
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
 .btn-start:active { transform: translateY(0); }
@@ -337,11 +326,11 @@ body {
 .timer-wrap { margin: 16px 0 24px; }
 
 .timer {
-  font-family: 'Orbitron', monospace;
-  font-size: 4.8rem; font-weight: 900;
-  color: var(--gold); letter-spacing: 2px; line-height: 1;
-  text-shadow: 0 0 40px var(--gold-glow);
-  transition: text-shadow 0.3s;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 4.2rem; font-weight: 700;
+  color: var(--text); letter-spacing: 1px; line-height: 1;
+  transition: color 0.3s;
+  white-space: nowrap;
 }
 
 .timer-label {
@@ -359,18 +348,17 @@ body {
 .success-trophy { font-size: 4rem; margin-bottom: 10px; }
 
 .success-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 1.3rem; font-weight: 900;
-  color: var(--accent); letter-spacing: 2px; margin-bottom: 14px;
-  text-shadow: 0 0 20px var(--accent-glow);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--accent); letter-spacing: 1px; margin-bottom: 14px;
 }
 
 .result-time {
-  font-family: 'Orbitron', monospace;
-  font-size: 3.8rem; font-weight: 900;
-  color: var(--gold); letter-spacing: 2px; line-height: 1;
-  text-shadow: 0 0 40px var(--gold-glow);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 3.5rem; font-weight: 700;
+  color: var(--text); letter-spacing: 1px; line-height: 1;
   margin: 14px 0 6px;
+  white-space: nowrap;
 }
 
 .result-label {
@@ -431,8 +419,8 @@ body {
 }
 
 .section-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 0.85rem; font-weight: 700; letter-spacing: 2px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.95rem; font-weight: 700; letter-spacing: 1px;
   color: var(--text);
 }
 
@@ -493,11 +481,11 @@ body {
 .player-name-cell { font-weight: 600; color: var(--text); }
 
 .time-chip {
-  font-family: 'Orbitron', monospace;
-  font-size: 0.85rem; font-weight: 700; color: var(--gold);
-  background: rgba(255,215,0,0.07);
-  border: 1px solid rgba(255,215,0,0.18);
-  border-radius: 8px; padding: 4px 10px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 4px 10px;
   display: inline-block;
 }
 

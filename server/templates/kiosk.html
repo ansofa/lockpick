@@ -3,12 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Lockpick Simulator — Real-time deadbolt timing system" />
-  <title>Lockpick Training System</title>
+  <title>Kiosk - Lockpick Training System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    /* Override khusus untuk Kiosk mode (Layar penuh, tanpa scroll) */
+    body {
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .main {
+      padding-top: 0 !important;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card {
+      transform: scale(1.15); /* Diperbesar agar jelas di monitor Raspberry Pi */
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
   <!-- Background decorations -->
@@ -16,34 +38,16 @@
   <div class="bg-glow" aria-hidden="true"></div>
   <div class="bg-glow-bottom" aria-hidden="true"></div>
 
-  <!-- Header -->
-  <header class="header" role="banner">
-    <div class="unit-badge">
-      <span class="unit-icon" aria-hidden="true">🔒</span>
-      <span class="unit-name">{{ unit_name }}</span>
-      <span class="version-chip">v{{ version }}</span>
-    </div>
-    <nav aria-label="Navigasi utama">
-      <a href="/admin" class="nav-link">
-        <span aria-hidden="true">📊</span> Panel Instruktur
-      </a>
-    </nav>
-  </header>
-
-  <!-- Main content -->
+  <!-- Main content (No Header for Kiosk) -->
   <main class="main" id="main-content" role="main">
 
-    <!-- ═══════════════════════════════════════
-         STATE: IDLE — Input nama pemain
-    ════════════════════════════════════════ -->
+    <!-- STATE: IDLE -->
     <section id="state-idle" class="state-panel active" aria-label="Halaman mulai">
       <div class="card" role="region">
-
         <h1 class="main-title">
           LOCKPICK<br>
           <span class="main-title-sub">TRAINING SYSTEM</span>
         </h1>
-        <p class="subtitle">Masukkan ID Peserta untuk memulai simulasi</p>
 
         <form id="start-form" class="form" novalidate>
           <div class="field-wrap">
@@ -56,27 +60,19 @@
               maxlength="30"
               autocomplete="off"
               required
-              aria-required="true"
-              aria-label="Nama pemain"
             />
             <label class="field-label" for="player-name-input">ID PESERTA</label>
             <div class="field-bar"></div>
           </div>
-
-          <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
-
+          <p id="form-error" class="form-error" role="alert"></p>
           <button type="submit" class="btn btn-start" id="btn-start">
-            <span class="btn-icon" aria-hidden="true">▶</span>
-            START MISSION
+            <span class="btn-icon" aria-hidden="true">▶</span> MULAI EVALUASI
           </button>
         </form>
-
       </div>
     </section>
 
-    <!-- ═══════════════════════════════════════
-         STATE: READY — Standby sebelum mulai
-    ════════════════════════════════════════ -->
+    <!-- STATE: READY -->
     <section id="state-ready" class="state-panel" aria-label="Bersiap mulai">
       <div class="card card-ready" role="region">
         <h2 class="success-title" style="color: var(--blue); font-size: 2rem;">STANDBY</h2>
@@ -91,11 +87,11 @@
         </div>
         
         <p class="subtitle" style="margin-top: 1.5rem; margin-bottom: 2rem; max-width: 300px; margin-left: auto; margin-right: auto;">
-          Alat siap. Waktu akan dihitung seketika saat tombol ditekan.
+          Sistem siap. Waktu akan dihitung seketika saat tombol ditekan.
         </p>
         
         <button class="btn btn-start" id="btn-start-ready" onclick="startReadySession()" style="width: 100%; margin-bottom: 1rem;">
-          <span class="btn-icon" aria-hidden="true">▶</span> MULAI SIMULASI
+          <span class="btn-icon" aria-hidden="true">▶</span> MULAI EVALUASI
         </button>
         
         <button class="btn btn-outline" id="btn-cancel-ready" onclick="resetSession()" style="width: 100%;">
@@ -104,61 +100,43 @@
       </div>
     </section>
 
-    <!-- ═══════════════════════════════════════
-         STATE: RUNNING — Timer berjalan
-    ════════════════════════════════════════ -->
+    <!-- STATE: RUNNING -->
     <section id="state-running" class="state-panel" aria-label="Sesi berjalan">
       <div class="card card-running" role="region">
-
         <div class="player-chip" id="running-player-name">
           <span aria-hidden="true">👤</span> —
         </div>
-
-        <div class="timer-wrap">
+        <div class="timer-wrap" role="timer" aria-label="Waktu berlalu">
           <div class="timer" id="timer-display" aria-live="off">00:00.000</div>
           <div class="timer-label">ELAPSED TIME</div>
         </div>
-
         <div class="door-pill large" id="running-door-pill" role="status">
           <span class="door-dot locked pulse" id="running-door-dot"></span>
           <span id="running-door-text">DEADBOLT AKTIF</span>
         </div>
-
         <p class="mission-hint">Buka deadbolt secepat mungkin.</p>
-
         <button class="btn btn-reset" id="btn-reset-running" onclick="resetSession()">
           <span aria-hidden="true">↺</span> RESET
         </button>
-
       </div>
     </section>
 
-    <!-- ═══════════════════════════════════════
-         STATE: STOPPED — Hasil sesi
-    ════════════════════════════════════════ -->
+    <!-- STATE: STOPPED -->
     <section id="state-stopped" class="state-panel" aria-label="Sesi selesai">
       <div class="card card-success" role="region">
-
         <div class="success-trophy" aria-hidden="true">✅</div>
         <h2 class="success-title">SIMULASI SELESAI</h2>
         <p class="subtitle" style="margin-bottom: 10px;">Evaluasi waktu pembobolan:</p>
-
         <div class="player-chip" id="stopped-player-name">
           <span aria-hidden="true">👤</span> —
         </div>
-
-        <div class="result-time" id="result-time-display">00:00.000</div>
+        <div class="result-time" id="result-time-display" role="status">00:00.000</div>
         <div class="result-label">TOTAL WAKTU</div>
-
         <div class="result-actions">
-          <button class="btn btn-start" onclick="resetSession()">
+          <button class="btn btn-start" id="btn-play-again" onclick="resetSession()">
             <span class="btn-icon" aria-hidden="true">🔄</span> ULANGI SIMULASI
           </button>
-          <a href="/history" class="btn btn-outline" id="btn-leaderboard">
-            <span aria-hidden="true">📊</span> LEADERBOARD
-          </a>
         </div>
-
       </div>
     </section>
 
@@ -166,6 +144,7 @@
 
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
+  <!-- Scripts -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
   <script src="/static/app.js"></script>
 </body>

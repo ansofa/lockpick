@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Evaluator — Training System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+    @media (max-width: 768px) {
+      .admin-grid { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(16px);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  
+  <header class="header" role="banner">
+    <div class="unit-badge">
+      <span class="unit-icon" aria-hidden="true">⚙️</span>
+      <span class="unit-name">Panel Instruktur</span>
+    </div>
+    <nav aria-label="Navigasi utama" style="display:flex; gap: 10px;">
+      <a href="/" class="nav-link" target="_blank">
+        <span aria-hidden="true">👁️</span> Kiosk View
+      </a>
+      <a href="/logout" class="nav-link" style="color: var(--danger); border-color: var(--danger);">
+        <span aria-hidden="true">🚪</span> Logout
+      </a>
+    </nav>
+  </header>
+
+  <main class="main history-main" role="main" style="align-items: flex-start; max-width: 1200px; margin: 0 auto; width: 100%;">
+    <div style="width: 100%;">
+      <h2 class="section-title" style="font-size: 1.5rem; margin-bottom: 8px;">PANEL KENDALI</h2>
+      <p class="subtitle">Kelola sistem simulasi dan rekapitulasi data evaluasi</p>
+
+      <div class="admin-grid">
+        <!-- Kolom Kiri -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <!-- Hardware Monitor Panel -->
+          <div class="panel">
+            <h3 class="section-title" style="margin-bottom: 15px;">RASPBERRY PI STATUS</h3>
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; flex: 1; min-width: 70px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 1px;">TEMP</div>
+                <div id="hw-temp" style="font-family: Orbitron; font-weight: bold; color: var(--accent); font-size: 1.1rem;">--</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; flex: 1; min-width: 70px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 1px;">LOAD</div>
+                <div id="hw-load" style="font-family: Orbitron; font-weight: bold; color: var(--gold); font-size: 1.1rem;">--</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; flex: 1; min-width: 70px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 0.65rem; color: var(--text-dim); margin-bottom: 5px; letter-spacing: 1px;">RAM</div>
+                <div id="hw-ram" style="font-family: Orbitron; font-weight: bold; color: var(--blue); font-size: 1.1rem;">--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Remote Start Panel -->
+          <div class="panel">
+          <h3 class="section-title" style="margin-bottom: 20px;">REMOTE START</h3>
+          <p class="text-dim" style="margin-bottom: 20px;">Picu simulasi peserta dari jauh.</p>
+          
+          <div class="field-wrap" style="margin-bottom: 15px;">
+            <input type="text" id="remote-name" class="field-input" placeholder=" " autocomplete="off" />
+            <label class="field-label" for="remote-name">ID PESERTA</label>
+            <div class="field-bar"></div>
+          </div>
+          
+          <button class="btn btn-start" onclick="remoteStart()" style="margin-bottom: 10px;">
+            MULAI SIMULASI
+          </button>
+          <button class="btn btn-reset" onclick="remoteReset()" style="width:100%;">
+            FORCE RESET
+          </button>
+        </div>
+        </div>
+
+        <!-- History Panel -->
+        <div class="panel" style="overflow-x: auto;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h3 class="section-title">LOG PELATIHAN</h3>
+            <span class="session-count" id="session-count">{{ sessions|length }} Total</span>
+          </div>
+
+          <table class="data-table" id="sessions-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>NAMA</th>
+                <th>WAKTU</th>
+                <th>TANGGAL</th>
+                <th>AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody">
+              {% if sessions %}
+                {% for s in sessions %}
+                <tr>
+                  <td class="text-dim">#{{ s.id }}</td>
+                  <td class="player-name-cell">{{ s.player_name }}</td>
+                  <td>
+                    {% if s.duration_ms %}
+                    <span class="time-chip">{{ s.duration_display }}</span>
+                    {% else %}
+                    <span class="text-dim">Dibatalkan</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-dim">{{ s.start_time }}</td>
+                  <td>
+                    <form action="/admin/delete_session/{{ s.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data ini?');">
+                      <button type="submit" style="background:transparent; border:none; color:var(--danger); cursor:pointer;">Hapus</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr id="empty-row"><td colspan="5" class="text-dim" style="text-align:center; padding: 30px;">Belum ada riwayat pelatihan.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
+  <script>
+    const socket = io();
+
+    function remoteStart() {
+      const name = document.getElementById('remote-name').value.trim();
+      if (!name) {
+        alert("Masukkan ID peserta terlebih dahulu!");
+        return;
+      }
+      socket.emit('prepare_session', { player_name: name });
+      document.getElementById('remote-name').value = '';
+      alert("Sistem disiapkan! Peserta dapat menekan MULAI SIMULASI di perangkat.");
+    }
+
+    function remoteReset() {
+      if(confirm('Reset sistem secara paksa? Evaluasi berjalan akan dibatalkan.')) {
+        socket.emit('reset_session');
+      }
+    }
+
+    // Auto-update tabel Log Pelatihan tanpa reload halaman
+    function formatMs(ms) {
+      if (ms == null || isNaN(ms)) return '--:---.---';
+      const totalSec = ms / 1000;
+      const min      = Math.floor(totalSec / 60);
+      const sec      = Math.floor(totalSec % 60);
+      const mill     = ms % 1000;
+      return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(mill).padStart(3,'0')}`;
+    }
+
+    async function fetchSessionsAndUpdateTable() {
+      try {
+        const res = await fetch('/api/v1/sessions');
+        const sessions = await res.json();
+        
+        const tbody = document.getElementById('sessions-tbody');
+        if (!tbody) return;
+        
+        document.getElementById('session-count').textContent = `${sessions.length} Total`;
+        tbody.innerHTML = '';
+        
+        if (sessions.length === 0) {
+          tbody.innerHTML = '<tr id="empty-row"><td colspan="5" class="text-dim" style="text-align:center; padding: 30px;">Belum ada riwayat pelatihan.</td></tr>';
+          return;
+        }
+        
+        sessions.forEach(s => {
+          const tr = document.createElement('tr');
+          const durationHtml = s.duration_ms 
+            ? `<span class="time-chip">${formatMs(s.duration_ms)}</span>` 
+            : `<span class="text-dim">Dibatalkan</span>`;
+            
+          tr.innerHTML = `
+            <td class="text-dim">#${s.id}</td>
+            <td class="player-name-cell">${s.player_name}</td>
+            <td>${durationHtml}</td>
+            <td class="text-dim">${s.start_time}</td>
+            <td>
+              <form action="/admin/delete_session/${s.id}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data ini?');">
+                <button type="submit" style="background:transparent; border:none; color:var(--danger); cursor:pointer;">Hapus</button>
+              </form>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        console.error("Gagal update tabel log:", e);
+      }
+    }
+
+    socket.on('session_complete', fetchSessionsAndUpdateTable);
+    socket.on('session_reset', fetchSessionsAndUpdateTable);
+
+    // Polling System Info (Tiap 5 detik)
+    async function fetchSysInfo() {
+      try {
+        const res = await fetch('/admin/api/sysinfo');
+        const data = await res.json();
+        document.getElementById('hw-temp').textContent = data.cpu_temp;
+        document.getElementById('hw-load').textContent = data.cpu_load;
+        document.getElementById('hw-ram').textContent = data.mem_usage;
+        
+        // Peringatan visual jika suhu tinggi (di atas 75C)
+        const tempVal = parseFloat(data.cpu_temp);
+        if (tempVal > 75) {
+          document.getElementById('hw-temp').style.color = 'var(--danger)';
+        } else {
+          document.getElementById('hw-temp').style.color = 'var(--accent)';
+        }
+      } catch (err) {
+        console.error('Gagal mengambil data sistem:', err);
+      }
+    }
+
+    fetchSysInfo();
+    setInterval(fetchSysInfo, 5000);
+  </script>
+</body>
+</html>

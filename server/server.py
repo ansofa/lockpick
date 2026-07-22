@@ -10,9 +10,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import threading
 import time
+import shutil
 from datetime import datetime
+from functools import wraps
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_socketio import SocketIO, emit
 
 
@@ -46,18 +48,59 @@ def _elapsed_ms() -> int:
     return int((time.monotonic() - _state['start_mono']) * 1000)
 
 
+def get_sys_info():
+    """Mengambil status hardware Raspberry Pi"""
+    info = {'cpu_temp': '--', 'cpu_load': '--', 'mem_usage': '--'}
+    
+    # Suhu CPU
+    try:
+        with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+            temp_c = int(f.read().strip()) / 1000.0
+            info['cpu_temp'] = f"{temp_c:.1f}°C"
+    except Exception:
+        info['cpu_temp'] = "N/A"
+        
+    # CPU Load
+    try:
+        load1, load5, load15 = os.getloadavg()
+        info['cpu_load'] = f"{load1:.2f} (1m)"
+    except Exception:
+        info['cpu_load'] = "N/A"
+        
+    # Memori (RAM)
+    try:
+        with open('/proc/meminfo', 'r') as f:
+            lines = f.readlines()
+            mem_total = mem_available = 0
+            for line in lines:
+                if line.startswith('MemTotal:'):
+                    mem_total = int(line.split()[1])
+                elif line.startswith('MemAvailable:'):
+                    mem_available = int(line.split()[1])
+            if mem_total > 0:
+                mem_used = mem_total - mem_available
+                percent = (mem_used / mem_total) * 100
+                info['mem_usage'] = f"{percent:.1f}%"
+    except Exception:
+        info['mem_usage'] = "N/A"
+        
+    return info
+
+
+# ─── Auth Decorator ──────────────────────────────────────────────
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 # ─── Timer Thread ────────────────────────────────────────────────
 def _timer_loop():
-    """Background thread: emit timer_update setiap 50ms selama running."""
-    while True:
-        with _state_lock:
-            if _state['mode'] == 'running':
-                ms = _elapsed_ms()
-                socketio.emit('timer_update', {
-                    'elapsed_ms': ms,
-                    'display':    format_ms(ms),
-                })
-        time.sleep(0.05)
+    """Background thread: tidak lagi digunakan (kalkulasi timer dipindah ke client)."""
+    pass
 
 
 # ─── Sensor Callbacks ────────────────────────────────────────────
@@ -114,6 +157,13 @@ def index():
                            version=config.VERSION)
 
 
+@app.route('/kiosk')
+def kiosk():
+    return render_template('kiosk.html',
+                           unit_name=config.UNIT_NAME,
+                           version=config.VERSION)
+
+
 @app.route('/history')
 def history():
     sessions    = database.get_all_sessions()
@@ -127,6 +177,54 @@ def history():
                            unit_name=config.UNIT_NAME,
                            sessions=sessions,
                            leaderboard=leaderboard)
+
+
+# ─── Admin Routes ────────────────────────────────────────────────
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form.get('password') == config.ADMIN_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('admin_dashboard'))
+        else:
+            error = 'Password salah.'
+    return render_template('login.html', error=error)
+
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('index'))
+
+
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    sessions = database.get_all_sessions()
+    for s in sessions:
+        s['duration_display'] = format_ms(s.get('duration_ms'))
+    return render_template('admin.html', sessions=sessions)
+
+
+@app.route('/admin/delete_session/<int:session_id>', methods=['POST'])
+@login_required
+def delete_session(session_id):
+    # Untuk fitur hapus, kita gunakan query DELETE langsung
+    import sqlite3
+    conn = sqlite3.connect(config.DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/api/sysinfo')
+@login_required
+def api_sysinfo():
+    """Mengembalikan metrik hardware Raspberry Pi sebagai JSON"""
+    return jsonify(get_sys_info())
 
 
 # ─── REST API (untuk Fase 2 Lockpick Manager) ────────────────────
@@ -240,12 +338,31 @@ def ws_connect():
     print(f"[WS] Client connect")
 
 
-@socketio.on('start_session')
-def ws_start(data):
+@socketio.on('prepare_session')
+def ws_prepare(data):
     player_name = ((data or {}).get('player_name') or 'Anonymous').strip() or 'Anonymous'
     with _state_lock:
         if _state['mode'] == 'running':
             return
+        _state.update({
+            'mode':        'ready',
+            'player_name': player_name,
+        })
+    socketio.emit('session_ready', {'player_name': player_name})
+    print(f"[WS] Sesi disiapkan: {player_name}")
+
+
+@socketio.on('start_session')
+def ws_start(data):
+    with _state_lock:
+        if _state['mode'] == 'running':
+            return
+        
+        # Ambil nama pemain dari state 'ready', jika tidak ada fallback ke payload data
+        player_name = _state['player_name']
+        if not player_name or _state['mode'] == 'idle':
+             player_name = ((data or {}).get('player_name') or 'Anonymous').strip() or 'Anonymous'
+
         start_dt   = datetime.now()
         session_id = database.create_session(player_name, start_dt)
         _state.update({
@@ -278,16 +395,21 @@ if __name__ == '__main__':
     # Init DB
     database.init_db()
 
-    # Init sensor
-    sensor = ProximitySwitch(
-        pin=config.GPIO_PIN,
-        on_lock=_on_door_locked,
-        on_unlock=_on_door_unlocked,
-    )
-    sensor.start()
+    # Aktifkan auto-reload (debug=True) jika ada env var LOCKPICK_DEV=1
+    is_dev = os.environ.get('LOCKPICK_DEV') == '1'
 
-    # Timer thread
-    threading.Thread(target=_timer_loop, daemon=True, name="timer").start()
+    # Cegah inisialisasi sensor di parent process (watcher) saat debug mode
+    if not is_dev or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        # Init sensor
+        sensor = ProximitySwitch(
+            pin=config.GPIO_PIN,
+            on_lock=_on_door_locked,
+            on_unlock=_on_door_unlocked,
+        )
+        sensor.start()
+
+        # Timer thread (disabled to save CPU, UI handled client-side via rAF)
+        # threading.Thread(target=_timer_loop, daemon=True, name="timer").start()
 
     print("=" * 50)
     print(f"  🔒 LOCKPICK SIMULATOR v{config.VERSION}")
@@ -296,8 +418,6 @@ if __name__ == '__main__':
     print(f"  🔌 GPIO : Pin {config.GPIO_PIN}")
     print("=" * 50)
 
-    # Aktifkan auto-reload (debug=True) jika ada env var LOCKPICK_DEV=1
-    is_dev = os.environ.get('LOCKPICK_DEV') == '1'
     if is_dev:
         print("  🛠️  DEV MODE AKTIF (Auto-reload enabled)")
         print("=" * 50)

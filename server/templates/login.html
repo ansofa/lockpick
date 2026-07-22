@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Instruktur — Training System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  
+  <header class="header" role="banner">
+    <div class="unit-badge">
+      <span class="unit-icon" aria-hidden="true">🔒</span>
+      <span class="unit-name">Panel Instruktur</span>
+    </div>
+    <nav aria-label="Navigasi utama">
+      <a href="/" class="nav-link">
+        <span aria-hidden="true">◀</span> Kembali ke Beranda
+      </a>
+    </nav>
+  </header>
+
+  <main class="main" role="main">
+    <div class="state-panel active" style="margin-top: -50px;">
+      <div class="card">
+        <h1 class="main-title">
+          INSTRUCTOR<span class="accent">LOGIN</span>
+        </h1>
+        <p class="subtitle">Otentikasi evaluator diperlukan</p>
+
+        <form method="POST" action="/login" class="form">
+          <div class="field-wrap">
+            <input
+              type="password"
+              id="password-input"
+              name="password"
+              class="field-input"
+              placeholder=" "
+              required
+            />
+            <label class="field-label" for="password-input">PASSWORD</label>
+            <div class="field-bar"></div>
+          </div>
+
+          {% if error %}
+          <p class="form-error" style="display: block;">{{ error }}</p>
+          {% else %}
+          <p class="form-error"></p>
+          {% endif %}
+
+          <button type="submit" class="btn btn-start">
+            <span class="btn-icon" aria-hidden="true">🔑</span> LOGIN
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
