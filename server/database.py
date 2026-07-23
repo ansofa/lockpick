@@ -250,6 +250,22 @@ def get_challenge_config(challenge_type: str) -> Optional[dict]:
         return dict(row) if row else None
 
 
+def update_challenge_config(
+    challenge_type: str,
+    time_limit_sec: int,
+    db_threshold: float,
+) -> None:
+    """Update konfigurasi batas waktu dan ambang desibel untuk sebuah challenge."""
+    with _get_conn() as conn:
+        conn.execute(
+            '''UPDATE challenge_configs
+               SET time_limit_sec = ?, db_threshold = ?
+               WHERE challenge_type = ?''',
+            (time_limit_sec, db_threshold, challenge_type)
+        )
+        conn.commit()
+
+
 def get_mortise_list() -> list[dict]:
     """Ambil daftar mortise yang tersedia."""
     with _get_conn() as conn:

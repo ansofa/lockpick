@@ -347,6 +347,19 @@ def api_sysinfo():
     return jsonify(get_sys_info())
 
 
+@app.route('/admin/api/challenges/<challenge_type>', methods=['POST'])
+@login_required
+def update_challenge(challenge_type):
+    data = request.get_json(silent=True) or {}
+    try:
+        time_limit_sec = int(data.get('time_limit_sec', 0))
+        db_threshold = float(data.get('db_threshold', 15.0))
+        database.update_challenge_config(challenge_type, time_limit_sec, db_threshold)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
 # ─── REST API ────────────────────────────────────────────────
 @app.route('/api/v1/status')
 def api_status():

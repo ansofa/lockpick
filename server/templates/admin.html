@@ -91,9 +91,23 @@
                 </div>
                 {% endfor %}
               </div>
-            {% else %}
-              <p class="text-xs text-muted"><i class="ph ph-warning"></i> sounddevice tidak tersedia — mode simulasi aktif.</p>
             {% endif %}
+          </div>
+
+          <!-- Konfigurasi Challenge Panel -->
+          <div class="panel">
+            <h3 class="panel-header"><i class="ph ph-sliders"></i> KONFIGURASI CHALLENGE</h3>
+            <div class="flex flex-col gap-2" style="font-size: 0.75rem;">
+              {% for c in challenges %}
+              <div class="flex justify-between items-center" style="padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <div>
+                  <span class="text-accent font-semibold">{{ c.label }}</span>
+                  <div class="text-muted font-mono" style="margin-top: 4px;">Waktu: {{ c.time_limit_sec }}s · dB Limit: {{ c.db_threshold }}dB</div>
+                </div>
+                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.7rem;" onclick="openConfigModal('{{ c.challenge_type }}', '{{ c.label }}', {{ c.time_limit_sec }}, {{ c.db_threshold }})">Edit</button>
+              </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
 
@@ -171,10 +185,71 @@
     </div>
   </main>
 
+  <!-- Modal Konfigurasi -->
+  <div id="config-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center;">
+    <div class="panel" style="width: 100%; max-width: 400px; background: var(--surface);">
+      <h3 class="panel-header" style="margin-bottom: 16px;"><i class="ph ph-faders"></i> Edit Konfigurasi</h3>
+      <p id="modal-challenge-label" class="text-accent font-semibold mb-4" style="margin-bottom: 16px;"></p>
+      
+      <input type="hidden" id="modal-challenge-type" />
+      
+      <div class="field-wrap" style="margin-bottom: 12px;">
+        <label class="field-label" for="modal-time-limit">BATAS WAKTU (DETIK, 0 = UNLIMITED)</label>
+        <input type="number" id="modal-time-limit" class="field-input" placeholder="0" min="0" />
+      </div>
+
+      <div class="field-wrap" style="margin-bottom: 24px;">
+        <label class="field-label" for="modal-db-threshold">AMBANG BATAS DESIBEL (dB)</label>
+        <input type="number" step="0.5" id="modal-db-threshold" class="field-input" placeholder="15.0" min="0" />
+      </div>
+
+      <div class="flex gap-2 justify-end">
+        <button class="btn btn-outline" onclick="closeConfigModal()">BATAL</button>
+        <button class="btn btn-start" onclick="saveConfigModal()">SIMPAN</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
   <script>
     const socket = io();
+
+    function openConfigModal(type, label, time, db) {
+      document.getElementById('modal-challenge-type').value = type;
+      document.getElementById('modal-challenge-label').innerText = label;
+      document.getElementById('modal-time-limit').value = time;
+      document.getElementById('modal-db-threshold').value = db;
+      document.getElementById('config-modal').style.display = 'flex';
+    }
+
+    function closeConfigModal() {
+      document.getElementById('config-modal').style.display = 'none';
+    }
+
+    async function saveConfigModal() {
+      const type = document.getElementById('modal-challenge-type').value;
+      const timeLimit = document.getElementById('modal-time-limit').value;
+      const dbThreshold = document.getElementById('modal-db-threshold').value;
+
+      try {
+        const res = await fetch(`/admin/api/challenges/${type}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ time_limit_sec: timeLimit, db_threshold: dbThreshold })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Konfigurasi berhasil disimpan!');
+          location.reload(); // reload to show updated data
+        } else {
+          alert('Gagal menyimpan: ' + data.error);
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan.');
+        console.error(err);
+      }
+    }
 
     function remoteStart() {
       const name = document.getElementById('remote-name').value.trim();
