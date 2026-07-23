@@ -172,7 +172,7 @@ function showPanel(name) {
 function updateDoor(locked) {
   doorIsLocked = locked;
   const dotClass  = locked ? 'locked' : 'unlocked';
-  const labelText = locked ? '🔒 DEADBOLT AKTIF' : '🔓 DEADBOLT TERBUKA';
+  const labelText = locked ? 'DEADBOLT AKTIF' : 'DEADBOLT TERBUKA';
   if ($idleDot)  $idleDot.className  = 'door-dot ' + dotClass;
   if ($idleText) $idleText.textContent = labelText;
   if ($readyDot) $readyDot.className = 'door-dot ' + dotClass;
@@ -239,7 +239,7 @@ function showCalibration(show) {
 // ─── SocketIO Events ─────────────────────────────────────────
 socket.on('connect', () => console.log('[WS] Connected'));
 
-socket.on('disconnect', () => showToast('Koneksi terputus — mencoba reconnect…', 'error'));
+socket.on('disconnect', () => showToast('<i class="ph ph-wifi-slash"></i> Koneksi terputus — mencoba reconnect…', 'error'));
 
 socket.on('state_sync', (data) => {
   updateDoor(data.door_locked);
@@ -311,10 +311,10 @@ socket.on('session_complete', (data) => {
     $resStatusBadge.textContent = isTimeout ? 'TIMEOUT' : 'SELESAI';
     $resStatusBadge.className   = 'status-badge ' + (isTimeout ? 'status-timeout' : 'status-completed');
   }
-  if ($resTrophy) $resTrophy.textContent = isTimeout ? '⏰' : '✅';
+  if ($resTrophy) $resTrophy.innerHTML = isTimeout ? '<i class="ph ph-clock" style="font-size: 3rem; color: var(--gold);"></i>' : '<i class="ph ph-check-circle" style="font-size: 3rem; color: var(--accent);"></i>';
 
   const scoreStr = data.score != null ? ` | Skor: ${data.score}` : '';
-  showToast(`${isTimeout ? '⏰ Timeout!' : '✅ Selesai!'} ${data.display_time}${scoreStr}`, 'success');
+  showToast(`${isTimeout ? '<i class="ph ph-clock"></i> Timeout!' : '<i class="ph ph-check-circle"></i> Selesai!'} ${data.display_time}${scoreStr}`, 'success');
 });
 
 socket.on('session_reset', () => {
@@ -337,7 +337,7 @@ socket.on('decibel_update', (data) => {
 socket.on('violation_alert', (data) => {
   if (currentPanel !== 'running') return;
   updateViolations(data.violations || 0);
-  showToast(`🔊 Violation! ${data.db?.toFixed(1)} dB`, 'error', 2000);
+  showToast(`<i class="ph ph-speaker-high"></i> Violation! ${data.db?.toFixed(1)} dB`, 'error', 2000);
 });
 
 socket.on('time_remaining', (data) => {
@@ -363,7 +363,7 @@ if ($startForm) {
 
 function startReadySession() {
   if (!doorIsLocked) {
-    showToast('🔒 Kunci deadbolt terlebih dahulu', 'error');
+    showToast('<i class="ph ph-lock"></i> Kunci deadbolt terlebih dahulu', 'error');
     return;
   }
   socket.emit('start_session', {});
@@ -386,7 +386,7 @@ function pad2(n) { return String(Math.floor(n)).padStart(2, '0'); }
 function pad3(n) { return String(Math.floor(n)).padStart(3, '0'); }
 
 function setPlayerChip(el, name) {
-  if (el) el.innerHTML = `<span aria-hidden="true">👤</span> ${escHtml(name || '—')}`;
+  if (el) el.innerHTML = `<i class="ph ph-user"></i> ${escHtml(name || '—')}`;
 }
 
 function escHtml(str) {

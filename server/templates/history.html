@@ -6,33 +6,32 @@
   <meta name="description" content="Lockpick History — Leaderboard dan riwayat sesi" />
   <title>History — {{ unit_name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="bg-grid" aria-hidden="true"></div>
-  <div class="bg-glow" aria-hidden="true"></div>
-
+  
   <header class="header" role="banner">
     <div class="unit-badge">
-      <span class="unit-icon" aria-hidden="true">🔒</span>
+      <i class="ph ph-lock unit-icon" aria-hidden="true"></i>
       <span class="unit-name">{{ unit_name }}</span>
     </div>
     <nav>
       <a href="/" class="nav-link" id="nav-home">
-        <span aria-hidden="true">⬅</span> Dashboard
+        <i class="ph ph-arrow-left" aria-hidden="true"></i> Dashboard
       </a>
     </nav>
   </header>
 
-  <main class="main history-main" role="main">
-    <div class="history-wrap">
+  <main class="main center-layout" role="main" style="align-items: stretch; max-width: 900px; margin: 0 auto; width: 100%;">
+    <div class="flex flex-col gap-4 w-full">
 
       <!-- ─── Leaderboard ─────────────────────────────── -->
-      <section class="history-section" aria-labelledby="leaderboard-heading">
-        <div class="section-header">
-          <h2 class="section-title" id="leaderboard-heading">
-            <span aria-hidden="true">🏆</span> TOP 10 LEADERBOARD
+      <section class="panel" aria-labelledby="leaderboard-heading">
+        <div class="panel-header">
+          <h2 id="leaderboard-heading" style="margin: 0; font-size: inherit; letter-spacing: inherit; font-weight: inherit;">
+            <i class="ph ph-trophy" aria-hidden="true"></i> TOP 10 LEADERBOARD
           </h2>
         </div>
 
@@ -41,107 +40,103 @@
           <table class="data-table" aria-describedby="leaderboard-heading">
             <thead>
               <tr>
-                <th scope="col" class="col-rank">#</th>
-                <th scope="col" class="col-player">PEMAIN</th>
+                <th scope="col" style="width: 50px;">#</th>
+                <th scope="col">PEMAIN</th>
                 <th scope="col">CHALLENGE</th>
-                <th scope="col" class="col-time">WAKTU</th>
+                <th scope="col">WAKTU</th>
                 <th scope="col">SKOR</th>
-                <th scope="col">VIOLATIONS</th>
-                <th scope="col" class="col-date">TANGGAL</th>
+                <th scope="col">VIO</th>
+                <th scope="col">TANGGAL</th>
               </tr>
             </thead>
             <tbody>
               {% for session in leaderboard %}
-              <tr class="{% if loop.index == 1 %}row-gold{% elif loop.index == 2 %}row-silver{% elif loop.index == 3 %}row-bronze{% endif %}">
-                <td class="col-rank">
-                  {% if loop.index == 1 %}<span class="rank-icon" aria-label="Peringkat 1">🥇</span>
-                  {% elif loop.index == 2 %}<span class="rank-icon" aria-label="Peringkat 2">🥈</span>
-                  {% elif loop.index == 3 %}<span class="rank-icon" aria-label="Peringkat 3">🥉</span>
-                  {% else %}<span class="rank-num" aria-label="Peringkat {{ loop.index }}">{{ loop.index }}</span>
+              <tr class="{% if loop.index == 1 %}bg-gold-dim{% elif loop.index == 2 %}bg-silver-dim{% elif loop.index == 3 %}bg-bronze-dim{% endif %}">
+                <td style="text-align: center;">
+                  {% if loop.index == 1 %}<i class="ph-fill ph-medal" style="color: #fbbf24; font-size: 1.25rem;"></i>
+                  {% elif loop.index == 2 %}<i class="ph-fill ph-medal" style="color: #94a3b8; font-size: 1.25rem;"></i>
+                  {% elif loop.index == 3 %}<i class="ph-fill ph-medal" style="color: #b45309; font-size: 1.25rem;"></i>
+                  {% else %}<span class="text-muted font-mono">{{ loop.index }}</span>
                   {% endif %}
                 </td>
-                <td class="col-player player-name-cell">{{ session.player_name }}</td>
-                <td style="font-size:0.75rem;">
-                  <span style="background:rgba(250,204,21,0.1);color:#fbbf24;border-radius:4px;padding:2px 6px;">{{ session.challenge_type or 'free' }}</span>
-                </td>
-                <td class="col-time">
+                <td class="font-semibold">{{ session.player_name }}</td>
+                <td><span class="challenge-chip">{{ session.challenge_type or 'free' }}</span></td>
+                <td>
                   <span class="time-chip">{{ session.duration_display }}</span>
                 </td>
-                <td style="font-family:'Roboto Mono',monospace;font-weight:700;color:#a5b4fc;">
+                <td class="font-mono text-blue font-bold">
                   {{ session.score if session.score is not none else '—' }}
                 </td>
-                <td style="color:{% if (session.violations or 0) > 0 %}#f87171{% else %}#4ade80{% endif %};font-weight:600;">
+                <td class="{% if (session.violations or 0) > 0 %}text-danger{% else %}text-accent{% endif %} font-semibold">
                   {{ session.violations or 0 }}
                 </td>
-                <td class="col-date">{{ session.created_at[:10] }}</td>
+                <td class="text-dim font-mono text-xs">{{ session.created_at[:10] }}</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
         {% else %}
-        <div class="empty-state" role="status">
-          <div class="empty-icon" aria-hidden="true">🎯</div>
-          <p>Belum ada sesi selesai.<br>Mainkan dulu di <a href="/" class="link-accent">Dashboard</a>!</p>
+        <div class="text-center text-muted" role="status" style="padding: 40px;">
+          <i class="ph ph-target" style="font-size: 2.5rem; margin-bottom: 12px; display: block;" aria-hidden="true"></i>
+          <p>Belum ada sesi selesai.<br>Mainkan dulu di <a href="/" class="text-accent" style="text-decoration: none;">Dashboard</a>!</p>
         </div>
         {% endif %}
       </section>
 
       <!-- ─── Semua Sesi ────────────────────────────────── -->
-      <section class="history-section" aria-labelledby="all-sessions-heading">
-        <div class="section-header">
-          <h2 class="section-title" id="all-sessions-heading">
-            <span aria-hidden="true">📋</span> RIWAYAT SESI
+      <section class="panel" aria-labelledby="all-sessions-heading">
+        <div class="panel-header" style="border-bottom: none; margin-bottom: 0;">
+          <h2 id="all-sessions-heading" style="margin: 0; font-size: inherit; letter-spacing: inherit; font-weight: inherit;">
+            <i class="ph ph-list-dashes" aria-hidden="true"></i> RIWAYAT SESI
           </h2>
-          <span class="session-count">{{ sessions|length }} sesi</span>
+          <span class="version-chip">{{ sessions|length }} SESI</span>
         </div>
 
         {% if sessions %}
-        <div class="table-wrap" role="region" aria-label="Semua sesi">
+        <div class="table-wrap" role="region" aria-label="Semua sesi" style="margin-top: 16px;">
           <table class="data-table" aria-describedby="all-sessions-heading">
             <thead>
               <tr>
-                <th scope="col" class="col-id">ID</th>
-                <th scope="col" class="col-player">PEMAIN</th>
+                <th scope="col">ID</th>
+                <th scope="col">PEMAIN</th>
                 <th scope="col">CHALLENGE</th>
-                <th scope="col" class="col-time">WAKTU</th>
+                <th scope="col">WAKTU</th>
                 <th scope="col">SKOR</th>
-                <th scope="col">VIOLATIONS</th>
+                <th scope="col">VIO</th>
                 <th scope="col">STATUS</th>
-                <th scope="col" class="col-date">TANGGAL &amp; JAM</th>
+                <th scope="col">TANGGAL &amp; JAM</th>
               </tr>
             </thead>
             <tbody>
               {% for session in sessions %}
               <tr>
-                <td class="col-id text-dim">#{{ session.id }}</td>
-                <td class="col-player player-name-cell">{{ session.player_name }}</td>
-                <td style="font-size:0.75rem;">
-                  <span style="background:rgba(250,204,21,0.1);color:#fbbf24;border-radius:4px;padding:2px 6px;">{{ session.challenge_type or 'free' }}</span>
-                </td>
-                <td class="col-time">
+                <td class="text-muted font-mono text-xs">#{{ session.id }}</td>
+                <td class="font-semibold">{{ session.player_name }}</td>
+                <td><span class="challenge-chip">{{ session.challenge_type or 'free' }}</span></td>
+                <td>
                   <span class="time-chip">{{ session.duration_display }}</span>
                 </td>
-                <td style="font-family:'Roboto Mono',monospace;font-weight:600;color:#a5b4fc;">
+                <td class="font-mono text-blue font-bold">
                   {{ session.score if session.score is not none else '—' }}
                 </td>
-                <td style="color:{% if (session.violations or 0) > 0 %}#f87171{% else %}#4ade80{% endif %};">
+                <td class="{% if (session.violations or 0) > 0 %}text-danger{% else %}text-accent{% endif %}">
                   {{ session.violations or 0 }}
                 </td>
                 <td>
-                  {% if session.status == 'completed' %}<span style="color:#4ade80;font-size:0.75rem;">✓ Lulus</span>
-                  {% elif session.status == 'timeout'  %}<span style="color:#fbbf24;font-size:0.75rem;">⏰ Timeout</span>
-                  {% else %}<span style="color:var(--text-muted);font-size:0.75rem;">{{ session.status or '—' }}</span>{% endif %}
+                  {% if session.status == 'completed' %}<span class="status-chip-ok"><i class="ph ph-check-circle"></i> Lulus</span>
+                  {% elif session.status == 'timeout'  %}<span class="status-chip-to"><i class="ph ph-clock"></i> Timeout</span>
+                  {% else %}<span class="text-muted text-xs">{{ session.status or '—' }}</span>{% endif %}
                 </td>
-                <td class="col-date text-dim">{{ session.created_at[:16].replace('T', ' ') }}</td>
+                <td class="text-dim font-mono text-xs">{{ session.created_at[:16].replace('T', ' ') }}</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
         {% else %}
-        <div class="empty-state" role="status">
-          <div class="empty-icon" aria-hidden="true">📭</div>
+        <div class="text-center text-muted" role="status" style="padding: 40px;">
+          <i class="ph ph-tray" style="font-size: 2.5rem; margin-bottom: 12px; display: block;" aria-hidden="true"></i>
           <p>Belum ada riwayat sesi.</p>
         </div>
         {% endif %}

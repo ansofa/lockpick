@@ -27,8 +27,17 @@ try:
     import sounddevice as sd
     import numpy as np
     _AUDIO_AVAILABLE = True
-except (ImportError, OSError):
+except ImportError as _e:
     _AUDIO_AVAILABLE = False
+    _AUDIO_ERROR = f"ImportError: {_e} — jalankan: pip install sounddevice numpy"
+except OSError as _e:
+    _AUDIO_AVAILABLE = False
+    _AUDIO_ERROR = f"OSError: {_e} — jalankan: sudo apt install libportaudio2"
+except Exception as _e:
+    _AUDIO_AVAILABLE = False
+    _AUDIO_ERROR = f"{type(_e).__name__}: {_e}"
+else:
+    _AUDIO_ERROR = None
 
 
 def _rms_to_db(rms: float) -> float:
@@ -149,8 +158,8 @@ class MicMonitor:
         # Simulation mode
         self._sim_mode = not _AUDIO_AVAILABLE
         if self._sim_mode:
-            print("[MIC] ⚠️  Simulation mode — sounddevice/numpy tidak tersedia")
-            print("[MIC] Install: pip install sounddevice numpy")
+            reason = globals().get('_AUDIO_ERROR', 'tidak diketahui')
+            print(f"[MIC] ⚠️  Simulation mode — {reason}")
             print("[MIC] Gunakan POST /api/v1/simulate/noise untuk trigger violation.")
         else:
             dev_info = ""

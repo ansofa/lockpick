@@ -8,36 +8,32 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <!-- Background decorations -->
-  <div class="bg-grid" aria-hidden="true"></div>
-  <div class="bg-glow" aria-hidden="true"></div>
-  <div class="bg-glow-bottom" aria-hidden="true"></div>
-
   <!-- Header -->
   <header class="header" role="banner">
     <div class="unit-badge">
-      <span class="unit-icon" aria-hidden="true">🔒</span>
+      <i class="ph ph-lock unit-icon" aria-hidden="true"></i>
       <span class="unit-name">{{ unit_name }}</span>
       <span class="version-chip">v{{ version }}</span>
     </div>
     <nav aria-label="Navigasi utama">
       <a href="/admin" class="nav-link">
-        <span aria-hidden="true">📊</span> Panel Instruktur
+        <i class="ph ph-chart-bar" aria-hidden="true"></i> Panel Instruktur
       </a>
     </nav>
   </header>
 
   <!-- Main content -->
-  <main class="main" id="main-content" role="main">
+  <main class="main center-layout" id="main-content" role="main">
 
     <!-- ═══════════════════════════════════════
          STATE: IDLE — Input nama pemain
     ════════════════════════════════════════ -->
     <section id="state-idle" class="state-panel active" aria-label="Halaman mulai">
-      <div class="card" role="region">
+      <div class="panel" role="region">
 
         <h1 class="main-title">
           LOCKPICK<br>
@@ -47,26 +43,25 @@
 
         <form id="start-form" class="form" novalidate>
           <div class="field-wrap">
+            <label class="field-label" for="player-name-input">ID PESERTA</label>
             <input
               type="text"
               id="player-name-input"
               name="player_name"
               class="field-input"
-              placeholder=" "
+              placeholder="CTH: OPR-001"
               maxlength="30"
               autocomplete="off"
               required
               aria-required="true"
               aria-label="Nama pemain"
             />
-            <label class="field-label" for="player-name-input">ID PESERTA</label>
-            <div class="field-bar"></div>
           </div>
 
           <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
 
           <button type="submit" class="btn btn-start" id="btn-start">
-            <span class="btn-icon" aria-hidden="true">▶</span>
+            <i class="ph ph-play" aria-hidden="true"></i>
             START MISSION
           </button>
         </form>
@@ -78,11 +73,11 @@
          STATE: READY — Standby sebelum mulai
     ════════════════════════════════════════ -->
     <section id="state-ready" class="state-panel" aria-label="Bersiap mulai">
-      <div class="card card-ready" role="region">
-        <h2 class="success-title" style="color: var(--blue); font-size: 2rem;">STANDBY</h2>
+      <div class="panel" role="region">
+        <h2 class="font-mono text-accent" style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;">STANDBY</h2>
         
         <div class="player-chip" id="ready-player-name">
-          <span aria-hidden="true">👤</span> —
+          <i class="ph ph-user" aria-hidden="true"></i> —
         </div>
 
         <div class="door-pill" id="ready-door-pill" role="status" aria-live="polite" style="margin-top: 1rem;">
@@ -90,17 +85,19 @@
           <span id="ready-door-text">Mengecek sensor…</span>
         </div>
         
-        <p class="subtitle" style="margin-top: 1.5rem; margin-bottom: 2rem; max-width: 300px; margin-left: auto; margin-right: auto;">
+        <p class="subtitle" style="margin-top: 1.5rem; margin-bottom: 2rem;">
           Alat siap. Waktu akan dihitung seketika saat tombol ditekan.
         </p>
         
-        <button class="btn btn-start" id="btn-start-ready" onclick="startReadySession()" style="width: 100%; margin-bottom: 1rem;">
-          <span class="btn-icon" aria-hidden="true">▶</span> MULAI SIMULASI
-        </button>
-        
-        <button class="btn btn-outline" id="btn-cancel-ready" onclick="resetSession()" style="width: 100%;">
-          BATALKAN
-        </button>
+        <div class="flex flex-col gap-2">
+          <button class="btn btn-start" id="btn-start-ready" onclick="startReadySession()">
+            <i class="ph ph-play" aria-hidden="true"></i> MULAI SIMULASI
+          </button>
+          
+          <button class="btn btn-outline" id="btn-cancel-ready" onclick="resetSession()">
+            BATALKAN
+          </button>
+        </div>
       </div>
     </section>
 
@@ -108,10 +105,10 @@
          STATE: RUNNING — Timer berjalan
     ════════════════════════════════════════ -->
     <section id="state-running" class="state-panel" aria-label="Sesi berjalan">
-      <div class="card card-running" role="region">
+      <div class="panel" role="region" style="border-top-color: var(--danger); border-top-width: 4px;">
 
         <div class="player-chip" id="running-player-name">
-          <span aria-hidden="true">👤</span> —
+          <i class="ph ph-user" aria-hidden="true"></i> —
         </div>
 
         <div class="timer-wrap">
@@ -119,15 +116,15 @@
           <div class="timer-label">ELAPSED TIME</div>
         </div>
 
-        <div class="door-pill large" id="running-door-pill" role="status">
+        <div class="door-pill" id="running-door-pill" role="status" style="margin-bottom: 16px;">
           <span class="door-dot locked pulse" id="running-door-dot"></span>
           <span id="running-door-text">DEADBOLT AKTIF</span>
         </div>
 
-        <p class="mission-hint">Buka deadbolt secepat mungkin.</p>
+        <p class="subtitle" style="margin-bottom: 16px;">Buka deadbolt secepat mungkin.</p>
 
         <button class="btn btn-reset" id="btn-reset-running" onclick="resetSession()">
-          <span aria-hidden="true">↺</span> RESET
+          <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> RESET
         </button>
 
       </div>
@@ -137,25 +134,27 @@
          STATE: STOPPED — Hasil sesi
     ════════════════════════════════════════ -->
     <section id="state-stopped" class="state-panel" aria-label="Sesi selesai">
-      <div class="card card-success" role="region">
+      <div class="panel" role="region" style="border-top-color: var(--accent); border-top-width: 4px; text-align: center;">
 
-        <div class="success-trophy" aria-hidden="true">✅</div>
-        <h2 class="success-title">SIMULASI SELESAI</h2>
-        <p class="subtitle" style="margin-bottom: 10px;">Evaluasi waktu pembobolan:</p>
+        <div class="success-trophy" aria-hidden="true" style="margin-bottom: 16px;">
+          <i class="ph ph-check-circle" style="font-size: 4rem; color: var(--accent);"></i>
+        </div>
+        <h2 class="font-mono text-accent" style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">SIMULASI SELESAI</h2>
+        <p class="subtitle" style="margin-bottom: 16px;">Evaluasi waktu pembobolan:</p>
 
-        <div class="player-chip" id="stopped-player-name">
-          <span aria-hidden="true">👤</span> —
+        <div class="player-chip" id="stopped-player-name" style="margin-bottom: 16px;">
+          <i class="ph ph-user" aria-hidden="true"></i> —
         </div>
 
-        <div class="result-time" id="result-time-display">00:00.000</div>
-        <div class="result-label">TOTAL WAKTU</div>
+        <div class="timer" id="result-time-display" style="margin-bottom: 4px;">00:00.000</div>
+        <div class="timer-label" style="margin-bottom: 24px;">TOTAL WAKTU</div>
 
-        <div class="result-actions">
+        <div class="flex flex-col gap-2">
           <button class="btn btn-start" onclick="resetSession()">
-            <span class="btn-icon" aria-hidden="true">🔄</span> ULANGI SIMULASI
+            <i class="ph ph-arrows-clockwise" aria-hidden="true"></i> ULANGI SIMULASI
           </button>
           <a href="/history" class="btn btn-outline" id="btn-leaderboard">
-            <span aria-hidden="true">📊</span> LEADERBOARD
+            <i class="ph ph-chart-bar" aria-hidden="true"></i> LEADERBOARD
           </a>
         </div>
 
