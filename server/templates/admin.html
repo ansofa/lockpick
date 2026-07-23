@@ -66,6 +66,24 @@
               <input type="text" id="remote-name" class="field-input" placeholder="CTH: OPR-001" autocomplete="off" />
             </div>
             
+            <div class="field-wrap" style="margin-bottom: 12px;">
+              <label class="field-label" for="remote-challenge">CHALLENGE</label>
+              <select id="remote-challenge" class="field-input" style="appearance: auto; height: 36px; padding: 0 12px;">
+                {% for c in challenges %}
+                <option value="{{ c.challenge_type }}">{{ c.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field-wrap" style="margin-bottom: 16px;">
+              <label class="field-label" for="remote-mortise">MORTISE (KESULITAN)</label>
+              <select id="remote-mortise" class="field-input" style="appearance: auto; height: 36px; padding: 0 12px;">
+                {% for m in mortises %}
+                <option value="{{ m.id }}">{{ m.label }} (Lv.{{ m.difficulty }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            
             <div class="flex gap-2">
               <button class="btn btn-start w-full" onclick="remoteStart()">
                 <i class="ph ph-play"></i> MULAI
@@ -253,14 +271,17 @@
 
     function remoteStart() {
       const name = document.getElementById('remote-name').value.trim();
+      const challenge = document.getElementById('remote-challenge').value;
+      const mortise = document.getElementById('remote-mortise').value;
+      
       if (!name) {
         alert('Masukkan ID peserta terlebih dahulu!');
         return;
       }
       socket.emit('prepare_session', {
         player_name:    name,
-        challenge_type: 'free_practice',
-        mortise_id:     'basic_3pin',
+        challenge_type: challenge,
+        mortise_id:     mortise,
       });
       document.getElementById('remote-name').value = '';
       alert('Sistem disiapkan! Peserta dapat menekan MULAI SESI di perangkat.');
