@@ -133,6 +133,8 @@ def _on_door_unlocked():
 
 def _on_db_update(relative_db: float):
     """Callback dari MicMonitor setiap ~100ms. Emit ke semua client."""
+    socketio.emit('admin_audio_level', {'db': round(relative_db, 1)})
+    
     with _state_lock:
         if _state['mode'] != 'running':
             return

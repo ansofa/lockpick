@@ -61,7 +61,10 @@
 
         <!-- Audio Devices Info -->
         <div class="panel">
-          <h3 class="panel-header"><i class="ph ph-microphone-stage"></i> PERANGKAT AUDIO INPUT</h3>
+          <h3 class="panel-header" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="openAudioGraphModal()">
+            <span><i class="ph ph-microphone-stage"></i> PERANGKAT AUDIO INPUT</span>
+            <i class="ph ph-chart-line-up" title="Buka Grafik Audio"></i>
+          </h3>
           {% if audio_devices %}
             <div class="flex flex-col gap-2" style="font-size: 0.85rem;">
               {% for dev in audio_devices %}
@@ -105,6 +108,107 @@
 
     fetchSysInfo();
     setInterval(fetchSysInfo, 5000);
+  </script>
+
+  <!-- Modal Grafik Audio -->
+  <div id="audio-graph-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center;">
+    <div class="panel" style="width: 100%; max-width: 800px; background: var(--surface);">
+      <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+        <h3 class="panel-header" style="margin: 0; padding: 0; border: none;"><i class="ph ph-waveform"></i> REAL-TIME AUDIO LEVELS</h3>
+        <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" onclick="closeAudioGraphModal()">TUTUP</button>
+      </div>
+      <p class="text-xs text-muted mb-4">Gunakan <em>scroll wheel</em> pada grafik untuk memperbesar/memperkecil rentang waktu (time frame).</p>
+      
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="audioChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let socket = io();
+    let audioChart = null;
+    let maxDataPoints = 100; // Default: ~10 seconds at 100ms interval
+    
+    function initChart() {
+      const ctx = document.getElementById('audioChart').getContext('2d');
+      
+      let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, 'rgba(0, 229, 255, 0.4)');
+      gradient.addColorStop(1, 'rgba(0, 229, 255, 0.0)');
+
+      audioChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Decibels (dB)',
+            data: [],
+            borderColor: '#00e5ff',
+            backgroundColor: gradient,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { intersect: false },
+          scales: {
+            x: { display: false },
+            y: {
+              beginAtZero: true,
+              suggestedMax: 60,
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // Mouse scroll wheel event to adjust time frame
+      document.getElementById('audioChart').addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          // Zoom in: fewer points
+          maxDataPoints = Math.max(30, maxDataPoints - 10);
+        } else {
+          // Zoom out: more points
+          maxDataPoints = Math.min(600, maxDataPoints + 10);
+        }
+      });
+    }
+
+    socket.on('admin_audio_level', (data) => {
+      if (!audioChart) return;
+      
+      audioChart.data.labels.push('');
+      audioChart.data.datasets[0].data.push(data.db);
+      
+      if (audioChart.data.datasets[0].data.length > maxDataPoints) {
+        const diff = audioChart.data.datasets[0].data.length - maxDataPoints;
+        audioChart.data.labels.splice(0, diff);
+        audioChart.data.datasets[0].data.splice(0, diff);
+      }
+      
+      audioChart.update();
+    });
+
+    function openAudioGraphModal() {
+      document.getElementById('audio-graph-modal').style.display = 'flex';
+      if (!audioChart) {
+        initChart();
+      }
+    }
+
+    function closeAudioGraphModal() {
+      document.getElementById('audio-graph-modal').style.display = 'none';
+    }
   </script>
 </body>
 </html>
