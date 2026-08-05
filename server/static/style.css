@@ -154,6 +154,7 @@ body {
 .state-panel {
   display: none;
   width: 100%; max-width: 500px;
+  margin: 0 auto;
 }
 .state-panel.active { display: block; animation: fadeIn 0.4s ease-out; }
 

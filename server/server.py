@@ -307,13 +307,19 @@ def admin_dashboard():
     sessions   = database.get_all_sessions()
     challenges = database.get_challenge_configs()
     mortises   = database.get_mortise_list()
-    audio_devs = list_audio_inputs()
     for s in sessions:
         s['duration_display'] = format_ms(s.get('duration_ms'))
     return render_template('admin.html',
                            sessions=sessions,
                            challenges=challenges,
-                           mortises=mortises,
+                           mortises=mortises)
+
+
+@app.route('/admin/hardware')
+@login_required
+def admin_hardware():
+    audio_devs = list_audio_inputs()
+    return render_template('admin_hardware.html',
                            audio_devices=audio_devs)
 
 

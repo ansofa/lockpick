@@ -18,6 +18,12 @@
       <span class="unit-name">Panel Instruktur</span>
     </div>
     <nav aria-label="Navigasi utama" class="flex gap-2">
+      <a href="/admin" class="nav-link" style="color: var(--text); background: var(--bg);">
+        <i class="ph ph-squares-four" aria-hidden="true"></i> Dashboard
+      </a>
+      <a href="/admin/hardware" class="nav-link">
+        <i class="ph ph-cpu" aria-hidden="true"></i> Hardware
+      </a>
       <a href="/" class="nav-link" target="_blank">
         <i class="ph ph-desktop" aria-hidden="true"></i> Kiosk View
       </a>
@@ -37,24 +43,7 @@
         <!-- Kolom Kiri -->
         <div class="flex flex-col gap-4">
           
-          <!-- Hardware Monitor Panel -->
-          <div class="panel">
-            <h3 class="panel-header"><i class="ph ph-cpu"></i> RASPBERRY PI STATUS</h3>
-            <div class="flex justify-between gap-2 w-full">
-              <div class="metric-box w-full">
-                <div class="metric-lbl">TEMP</div>
-                <div id="hw-temp" class="metric-val text-accent">--</div>
-              </div>
-              <div class="metric-box w-full">
-                <div class="metric-lbl">LOAD</div>
-                <div id="hw-load" class="metric-val" style="color: var(--gold);">--</div>
-              </div>
-              <div class="metric-box w-full">
-                <div class="metric-lbl">RAM</div>
-                <div id="hw-ram" class="metric-val text-blue">--</div>
-              </div>
-            </div>
-          </div>
+          <!-- Panels removed to Hardware Status page -->
 
           <!-- Remote Start Panel -->
           <div class="panel">
@@ -94,23 +83,7 @@
             </div>
           </div>
 
-          <!-- Audio Devices Info -->
-          <div class="panel">
-            <h3 class="panel-header"><i class="ph ph-microphone-stage"></i> PERANGKAT AUDIO INPUT</h3>
-            {% if audio_devices %}
-              <div class="flex flex-col gap-2" style="font-size: 0.75rem;">
-                {% for dev in audio_devices %}
-                <div class="flex justify-between items-center" style="padding: 6px 0; border-bottom: 1px solid var(--border);">
-                  <div>
-                    <span class="text-muted font-mono">[{{ dev.index }}]</span>
-                    <span class="{% if 'usb' in dev.name|lower or 'microphone' in dev.name|lower %}text-accent font-semibold{% else %}text-dim{% endif %}" style="margin-left: 8px;">{{ dev.name }}</span>
-                  </div>
-                  <span class="text-muted font-mono text-xs">ch:{{ dev.channels }} · {{ dev.sample_rate }}Hz</span>
-                </div>
-                {% endfor %}
-              </div>
-            {% endif %}
-          </div>
+          <!-- Audio panel removed to Hardware Status page -->
 
           <!-- Konfigurasi Challenge Panel -->
           <div class="panel">
@@ -365,27 +338,7 @@
     socket.on('session_complete', fetchSessionsAndUpdateTable);
     socket.on('session_reset', fetchSessionsAndUpdateTable);
 
-    async function fetchSysInfo() {
-      try {
-        const res = await fetch('/admin/api/sysinfo');
-        const data = await res.json();
-        document.getElementById('hw-temp').textContent = data.cpu_temp;
-        document.getElementById('hw-load').textContent = data.cpu_load;
-        document.getElementById('hw-ram').textContent = data.mem_usage;
-        
-        const tempVal = parseFloat(data.cpu_temp);
-        if (tempVal > 75) {
-          document.getElementById('hw-temp').classList.replace('text-accent', 'text-danger');
-        } else {
-          document.getElementById('hw-temp').classList.replace('text-danger', 'text-accent');
-        }
-      } catch (err) {
-        console.error('Gagal mengambil data sistem:', err);
-      }
-    }
-
-    fetchSysInfo();
-    setInterval(fetchSysInfo, 5000);
+    // fetchSysInfo moved to hardware status page
   </script>
 </body>
 </html>
