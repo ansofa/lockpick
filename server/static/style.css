@@ -79,11 +79,24 @@ body {
 .font-bold { font-weight: 700; }
 .font-semibold { font-weight: 600; }
 .flex { display: flex; }
+.flex-col { flex-direction: column; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
 .gap-2 { gap: 0.5rem; }
 .gap-4 { gap: 1rem; }
 .w-full { width: 100%; }
+.text-center { text-align: center; }
+.mb-4 { margin-bottom: 1rem; }
+.text-blue { color: var(--blue); }
+.accent { color: var(--accent); }
+
+/* Login Page Utilities */
+.bg-grid { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+.bg-glow { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; display: flex; flex-direction: column; box-shadow: var(--shadow-card); }
+.btn-icon { font-size: 1.1em; display: inline-flex; align-items: center; }
+.field-bar { display: none; }
 
 /* ─── Header ─────────────────────────────────────────────────── */
 .header {
